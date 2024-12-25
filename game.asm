@@ -147,48 +147,86 @@ _GameEnd:
     syscall
 
 _HandleInput:
-     _PlayerInput: 
-         movss xmm1, [player.speed]
+    _CameraInput:
+        movss xmm1, [cameraZoomLevel]
 
-         _PlayerUp:
-             mov edi, 265
-             call IsKeyDown
-             test al, al
-             je _PlayerDown
+        _CheckCameraZoomIn:
+            mov edi, 90
+            call IsKeyDown
+            test al, al
+            je _CameraZoomOut
 
-             movss xmm0, [player.position.y]
-             subss xmm0, xmm1
-             movss [player.position.y], xmm0
-      
-         _PlayerDown:
-             mov edi, 264
-             call IsKeyDown
-             test al, al
-             je _PlayerLeft
+            movss xmm0, [camera.zoom]
+            addss xmm0, xmm1
+            movss xmm2, [cameraZoomMax]
+            comiss xmm0, xmm2
+            jbe _ApplyCameraZoomIn
 
-             movss xmm0, [player.position.y]
-             addss xmm0, xmm1
-             movss [player.position.y], xmm0
+            movss xmm0, xmm2
 
-         _PlayerLeft:
-             mov edi, 263
-             call IsKeyDown
-             test al, al
-             je _PlayerRight
+            _ApplyCameraZoomIn:
+                movss [camera.zoom], xmm0
+                jmp _PlayerInput
 
-             movss xmm0, [player.position.x]
-             subss xmm0, xmm1
-             movss [player.position.x], xmm0
+        _CameraZoomOut:
+            mov edi, 88
+            call IsKeyDown
+            test al, al
+            je _PlayerInput
 
-         _PlayerRight:
-             mov edi, 262
-             call IsKeyDown
-             test al, al
-             je _Render
+            movss xmm0, [camera.zoom]
+            subss xmm0, xmm1
+            movss xmm2, [cameraZoomMin]
+            comiss xmm0, xmm2
+            jae _ApplyCameraZoomOut
 
-             movss xmm0, [player.position.x]
-             addss xmm0, xmm1
-             movss [player.position.x], xmm0
+            movss xmm0, xmm2
+
+            _ApplyCameraZoomOut:
+                movss [camera.zoom], xmm0
+
+    _PlayerInput: 
+        movss xmm1, [player.speed]
+
+        _PlayerUp:
+            mov edi, 265
+            call IsKeyDown
+            test al, al
+            je _PlayerDown
+
+            movss xmm0, [player.position.y]
+            subss xmm0, xmm1
+            movss [player.position.y], xmm0
+
+        _PlayerDown:
+            mov edi, 264
+            call IsKeyDown
+            test al, al
+            je _PlayerLeft
+
+            movss xmm0, [player.position.y]
+            addss xmm0, xmm1
+            movss [player.position.y], xmm0
+
+        _PlayerLeft:
+            mov edi, 263
+            call IsKeyDown
+            test al, al
+            je _PlayerRight
+
+            movss xmm0, [player.position.x]
+            subss xmm0, xmm1
+            movss [player.position.x], xmm0
+
+        _PlayerRight:
+            mov edi, 262
+            call IsKeyDown
+            test al, al
+            je _Render
+
+            movss xmm0, [player.position.x]
+            addss xmm0, xmm1
+            movss [player.position.x], xmm0
 
      jmp _Render
 
@@ -200,5 +238,9 @@ player Player
 playerRect Rectangle
 
 windowTitle: db "Pixie", 0x00
+
+cameraZoomMin: dd 1.0
+cameraZoomLevel: dd 0.1
+cameraZoomMax: dd 4.0
 
 section '.note.GNU-stack'
