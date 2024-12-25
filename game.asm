@@ -15,11 +15,6 @@ extrn EndMode2D
 extrn ClearBackground
 extrn IsKeyDown
 extrn DrawRectangleRec
-extrn LoadImage
-extrn UnloadImage
-extrn LoadTexture
-extrn UnloadTexture
-extrn DrawTexture
 
 public _start
 
@@ -29,7 +24,7 @@ _start:
     cvtsi2ss xmm0, eax
     movss [windowSize.x], xmm0
 
-    mov eax, 600
+    mov eax, 450
     cvtsi2ss xmm0, eax
     movss [windowSize.y], xmm0
 
@@ -47,32 +42,26 @@ _start:
     ; Init Player
     mov eax, 400
     cvtsi2ss xmm0, eax
-    movss DWORD [player.position.x], xmm0   ; Player Position X
+    movss DWORD [player.position.x], xmm0
 
     mov eax, 280
     cvtsi2ss xmm0, eax
-    movss DWORD [player.position.y], xmm0   ; Player Position Y
+    movss DWORD [player.position.y], xmm0
 
-    pxor xmm0, xmm0
-    movss DWORD [player.speed], xmm0        ; Player Speed
+    mov eax, 2
+    cvtsi2ss xmm0, eax
+    movss DWORD [player.speed], xmm0
 
-    mov BYTE [player.canJump], 0            ; Player Jump
+    mov BYTE [player.canJump], 0
 
     ; Init Player Rectangle
-    movss xmm0, [player.position.x]
-    mov eax, 20
-    cvtsi2ss xmm1, eax
-    subss xmm0, xmm1
     movss [playerRect.x], xmm0
-
-    movss xmm0, [player.position.y]
-    mov eax, 40
-    cvtsi2ss xmm1, eax
-    subss xmm0, xmm1
     movss [playerRect.y], xmm0
 
-    movss [playerRect.width], xmm1
-    movss [playerRect.height], xmm1
+    mov eax, 40
+    cvtsi2ss xmm0, eax
+    movss [playerRect.width], xmm0
+    movss [playerRect.height], xmm0
 
     ; Init Camera
     movss xmm0, [player.position.x]
@@ -99,45 +88,12 @@ _start:
     cvtsi2ss xmm0, eax
     movss [camera.zoom], xmm0
 
-    ; Load Image
-    ; lea rax, [image]
-    ; lea rdx, [dogImage]
-    ; mov rdi, rax
-    ; mov rsi, rdx
-    ; call LoadImage
-
-    ; Init Texture
-    ; lea rsi, [texture]
-    ; sub rsp, 0x20
-    ; mov rcx, rsp
-    ; mov rax, [image]
-    ; mov rdx, [image + 8]
-    ; mov [rcx], rax
-    ; mov [rcx + 8], rdx
-    ; mov rax, [image + 16]
-    ; mov [rcx + 16], rax
-    ; mov rdi, rsi
-    ; call UnloadImage
-    ; add rsp, 0x20 
-
-    ; Unload Image
-    ; sub rsp, 0x20
-    ; mov rcx, rsp
-    ; mov rax, [image]
-    ; mov rdx, [image + 8]
-    ; mov [rcx], rax
-    ; mov [rcx + 8], rdx
-    ; mov rax, [image + 16]
-    ; mov [rcx + 16], rax
-    ; call UnloadImage
-    ; add rsp, 0x20
-
 _GameLoop:
     call WindowShouldClose
     test rax, rax
     jnz _GameEnd
 
-    ; jmp _HandleInput
+    jmp _HandleInput
 
 _Render:
     call BeginDrawing
@@ -157,17 +113,18 @@ _Render:
     call BeginMode2D
     add rsp, 0x20
 
-    ; movss xmm0, [playerRect.x]
-    ; cvtss2si eax, xmm0
-    ; mov edi, eax
+    ; Draw
+    mov eax, 20
+    cvtsi2ss xmm0, eax
+    movss xmm1, [player.position.x]
+    subss xmm1, xmm0
+    movss [playerRect.x], xmm1
 
-    ; movss xmm0, [playerRect.y]
-    ; cvtss2si eax, xmm0
-    ; mov esi, eax
-    ; mov edx, 50
-    ; mov ecx, 50
-    ; mov r8d, 0xFFFFFFFF
-    ; call DrawRectangle
+    mov eax, 40
+    cvtsi2ss xmm0, eax
+    movss xmm1, [player.position.y]
+    subss xmm1, xmm0
+    movss [playerRect.y], xmm1
 
     mov rax, [playerRect]
     movq xmm0, rax
@@ -183,135 +140,57 @@ _Render:
     jmp _GameLoop
 
 _GameEnd:
-
-    ; sub rsp, 0x20
-    ; mov rcx, rsp
-    ; mov rax, [texture]
-    ; mov rdx, [texture + 8]
-    ; mov [rcx], rax
-    ; mov [rcx + 8], rdx
-    ; mov eax, [texture + 16]
-    ; mov [rcx + 16], eax
-    ; call UnloadTexture
-    ; add rsp, 0x20
-
     call CloseWindow
 
     mov eax, 60
     mov edi, 0
     syscall
 
-; _HandleInput:
-; 
-;     pxor xmm0, xmm0
-;     pxor xmm1, xmm1
-; 
-;     _CameraInput: 
-; 
-;         _CameraZoomIn:
-;             mov edi, 90 ; Key Z
-;             call IsKeyDown
-;             test al, al
-;             je _CameraZoomOut
-; 
-;             movss xmm1, [cameraZoomLevel]
-;             movss xmm0, [camera.zoom]
-; 
-;             addss xmm1, xmm0
-; 
-;             movss [camera.zoom], xmm1
-; 
-;         _CameraZoomOut:
-;             mov edi, 88 ; Key X
-;             call IsKeyDown
-;             test al, al
-;             je _PlayerInput
-; 
-;             movss xmm1, [cameraZoomLevel]
-;             movss xmm0, [camera.zoom]
-; 
-;             subss xmm0, xmm1
-; 
-;             movss [camera.zoom], xmm0
-;    
-;     _PlayerInput: 
-; 
-;         movss xmm1, [player.speed]
-; 
-;         _PlayerUp:
-;             mov edi, 265
-;             call IsKeyDown
-;             test al, al
-;             je _PlayerDown
-; 
-;             movss xmm0, [player.position.y]
-;             subss xmm0, xmm1
-;             movss [player.position.y], xmm0
-; 
-;             jmp _CheckCollusion
-;      
-;         _PlayerDown:
-;             mov edi, 264
-;             call IsKeyDown
-;             test al, al
-;             je _PlayerLeft
-; 
-;             movss xmm0, [player.position.y]
-;             addss xmm0, xmm1
-;             movss [player.position.y], xmm0
-; 
-;             jmp _CheckCollusion
-; 
-;         _PlayerLeft:
-;             mov edi, 263
-;             call IsKeyDown
-;             test al, al
-;             je _PlayerRight
-; 
-;             movss xmm0, [player.position.x]
-;             subss xmm0, xmm1
-;             movss [player.position.x], xmm0
-; 
-;             jmp _CheckCollusion
-; 
-;         _PlayerRight:
-;             mov edi, 262
-;             call IsKeyDown
-;             test al, al
-;             je _CheckCollusion
-; 
-;             movss xmm0, [player.position.x]
-;             addss xmm0, xmm1
-;             movss [player.position.x], xmm0
-; 
-; _CheckCollusion:
-; 
-;     pxor xmm0, xmm0
-; 
-;     _BorderLeft:
-;         movss xmm1, [player.position.x]
-;         comiss xmm0, xmm1
-;         jbe _BorderTop
-;         
-;         movss [player.position.x], xmm0
-;     
-;     _BorderTop:
-;         movss xmm1, [player.position.y]
-;         comiss xmm0, xmm1
-;         jbe _Render
-; 
-;         movss [player.position.y], xmm0
-;    
-;     _BorderRight:
-;         movss xmm0, [player.position.x]
-;         movss xmm1, []
-;         movss xmm1, [windowSize.x]
-;         comiss xmm0, xmm1
-;         jge _Render
-; 
-;     _BorderDown:
-;         movss xmm0
-;         jmp _Render
+_HandleInput:
+     _PlayerInput: 
+         movss xmm1, [player.speed]
+
+         _PlayerUp:
+             mov edi, 265
+             call IsKeyDown
+             test al, al
+             je _PlayerDown
+
+             movss xmm0, [player.position.y]
+             subss xmm0, xmm1
+             movss [player.position.y], xmm0
+      
+         _PlayerDown:
+             mov edi, 264
+             call IsKeyDown
+             test al, al
+             je _PlayerLeft
+
+             movss xmm0, [player.position.y]
+             addss xmm0, xmm1
+             movss [player.position.y], xmm0
+
+         _PlayerLeft:
+             mov edi, 263
+             call IsKeyDown
+             test al, al
+             je _PlayerRight
+
+             movss xmm0, [player.position.x]
+             subss xmm0, xmm1
+             movss [player.position.x], xmm0
+
+         _PlayerRight:
+             mov edi, 262
+             call IsKeyDown
+             test al, al
+             je _Render
+
+             movss xmm0, [player.position.x]
+             addss xmm0, xmm1
+             movss [player.position.x], xmm0
+
+     jmp _Render
 
 section '.data' writeable
 
@@ -319,11 +198,7 @@ windowSize Vector2
 camera Camera2D
 player Player
 playerRect Rectangle
-image Image
-texture Texture2D
 
-cameraZoomLevel: dd 0.2
-windowTitle: db "Game", 0x00
-dogImage: db "dog.png", 0x00
+windowTitle: db "Pixie", 0x00
 
 section '.note.GNU-stack'
