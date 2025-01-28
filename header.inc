@@ -7,3 +7,6 @@ extrn EndDrawing
 extrn ClearBackground
 extrn LoadTexture
 extrn UnloadTexture
+
+extrn malloc
+extrn free

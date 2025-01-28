@@ -1,6 +1,6 @@
     ; Load SpriteSheet
 
-    ; Load Texture
+_LoadSpriteSheetData:
     lea rax, [spriteSheet]
     lea rdx, [warriorSheet]
 
@@ -12,36 +12,61 @@
     imul eax, 17
     mov [spriteSheet.frameCount], eax
 
-    sub rsp, 8
-    mov rcx, rsp
+    push rbp
+    mov rbp, rsp
+    sub rsp, 20
 
-    movss xmm0, [spriteSheet.texture.width]
-    mov eax, 6
-    cvtsi2ss xmm1, eax
-    divss xmm0, xmm1
-    movss [rcx], xmm0
+    mov eax, [spriteSheet.texture.width]
+    xor ecx, ecx
+    mov ecx, 6                              ; Columns Sheet
+    idiv ecx
+    mov [rbp - 4], eax                      ; width
 
-    movss xmm0, [spriteSheet.texture.height]
-    mov eax, 17
-    cvtsi2ss xmm1, eax
-    divss xmm0, xmm1
-    movss [rcx + 8], xmm0
+    mov eax, [spriteSheet.texture.height]
+    mov ecx, 17                             ; Rows Sheet
+    idiv ecx
+    mov [rbp - 8], eax                      ; height
 
-    add rsp, 8
+    mov eax, [spriteSheet.frameCount]
+    imul eax, 16                            ; Rectangle bytes
+    mov edi, eax 
+    call malloc
+    mov [spriteSheet.frames], rax
 
-    ; Unload Texture
-    sub rsp, 0x20
-    mov rcx, rsp
+    mov dword [rbp - 12], 0                 ; Count Index
+    mov dword [rbp - 16], 0                 ; row index
 
-    mov rax, [spriteSheet]
-    mov rdx, [spriteSheet + 8]
+.L4:
+    mov dword [rbp - 20], 0                 ; Column Index
+    jmp .L2
 
-    mov [rcx], rax
-    mov [rcx + 8], rdx
+.L3:
+    mov eax, [rbp - 12]
+    cdqe
+    sal eax, 4
+    mov rdx, rax
+    mov rax, [spriteSheet.frames]
+    add rdx, rax
 
-    mov eax, [spriteSheet + 16]
-    mov [rcx + 16], eax
+    mov eax, [rbp - 20]
+    imul eax, [rbp - 4]
 
-    call UnloadTexture
-    add rsp, 0x20
+    mov dword [rdx.x], eax
+
+    add dword [rbp - 12], 1
+    add dword [rbp - 20], 1
+
+.L2:
+    mov eax, [rbp - 20]
+    cmp eax, [rbp - 4]
+    jl .L3
+    add dword [rbp - 4], 1
+
+.L1:
+    mov eax, [rbp - 16]
+    cmp eax, [rbp - 8]
+    jl .L4
+
+    add rsp, 20
+    pop rbp
 
