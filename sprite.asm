@@ -1,5 +1,3 @@
-    ; Load SpriteSheet
-
 _LoadSpriteSheetData:
     lea rax, [spriteSheet]
     lea rdx, [warriorSheet]
@@ -8,65 +6,86 @@ _LoadSpriteSheetData:
     mov rsi, rdx
     call LoadTexture
 
-    mov eax, 6
-    imul eax, 17
-    mov [spriteSheet.frameCount], eax
-
     push rbp
     mov rbp, rsp
-    sub rsp, 20
+    sub rsp, 32
+
+    mov dword [rbp - 4], 17                     ; Rows
+    mov dword [rbp - 8], 6                      ; Columns
+    
+    mov eax, [rbp - 4]
+    imul eax, [rbp - 8]
+    mov [spriteSheet.frameCount], eax
 
     mov eax, [spriteSheet.texture.width]
-    xor ecx, ecx
-    mov ecx, 6                              ; Columns Sheet
+    mov ecx, [rbp - 8]
     idiv ecx
-    mov [rbp - 4], eax                      ; width
+    mov [rbp - 12], eax                         ; Width
 
     mov eax, [spriteSheet.texture.height]
-    mov ecx, 17                             ; Rows Sheet
-    idiv ecx
-    mov [rbp - 8], eax                      ; height
+    mov ecx, [rbp - 4]
+    idiv ecx 
+    mov [rbp - 16], eax                         ; Height
 
     mov eax, [spriteSheet.frameCount]
-    imul eax, 16                            ; Rectangle bytes
-    mov edi, eax 
+    cdqe
+    sal rax, 4
+    mov rdi, rax
     call malloc
     mov [spriteSheet.frames], rax
 
-    mov dword [rbp - 12], 0                 ; Count Index
-    mov dword [rbp - 16], 0                 ; row index
+    mov dword [rbp - 20], 0                     ; Counter
+    mov dword [rbp - 24], 0                     ; Row index
 
 .L4:
-    mov dword [rbp - 20], 0                 ; Column Index
+    mov dword [rbp - 28], 0                     ; Column Index
     jmp .L2
 
 .L3:
-    mov eax, [rbp - 12]
-    cdqe
-    sal eax, 4
-    mov rdx, rax
-    mov rax, [spriteSheet.frames]
-    add rdx, rax
-
     mov eax, [rbp - 20]
-    imul eax, [rbp - 4]
+    cdqe
+    sal rax, 4
+    mov rdx, rax
 
-    mov dword [rdx.x], eax
+    mov rax, [spriteSheet.frames]
+    add rax, rdx
 
-    add dword [rbp - 12], 1
+    mov edx, [rbp - 28]
+    imul edx, [rbp - 12]
+    mov dword [rax], edx
+
+    mov edx, [rbp - 24]
+    imul edx, [rbp - 16]
+    mov dword [rax + 4], edx
+
+    mov edx, [rbp - 28]
+    mov dword [rax + 8], edx
+
+    mov edx, [rbp - 24]
+    mov dword [rax + 12], edx
+
     add dword [rbp - 20], 1
+    add dword [rbp - 28], 1
 
 .L2:
-    mov eax, [rbp - 20]
-    cmp eax, [rbp - 4]
+    mov eax, [rbp - 28]
+    cmp eax, [rbp - 8]
     jl .L3
-    add dword [rbp - 4], 1
+
+    add dword [rbp - 24], 1
 
 .L1:
-    mov eax, [rbp - 16]
-    cmp eax, [rbp - 8]
+    mov eax, [rbp - 24]
+    cmp eax, [rbp - 4]
     jl .L4
 
-    add rsp, 20
+    add rsp, 32
     pop rbp
+
+    call _gameLoop
+
+_FreeSpriteSheetData:
+    mov rdi, [spriteSheet.frames]
+    call free
+
 

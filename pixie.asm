@@ -25,6 +25,7 @@ include 'render.asm'
     jmp _gameLoop
 
 _gameEnd:
+    call _FreeSpriteSheetData
     call CloseWindow
 
     mov eax, 60
