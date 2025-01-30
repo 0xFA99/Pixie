@@ -87,4 +87,6 @@ _LoadSpriteSheetData:
 _FreeSpriteSheetData:
     mov rdi, [spriteSheet.frames]
     call free
+	ret
+
 

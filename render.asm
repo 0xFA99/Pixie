@@ -11,8 +11,8 @@ _render:
     sub rsp, 16
     mov rcx, rsp
 
-    mov rax, qword [spriteSheet.texture.id]
-    mov rdx, qword [spriteSheet.texture.height]
+    mov rax, qword [spriteSheet.texture]
+    mov rdx, qword [spriteSheet.texture + 8]
 
     mov [rcx], rax
     mov [rcx + 8], rdx
@@ -24,7 +24,7 @@ _render:
     mov rax, qword [spriteSheet.frames]
     movq xmm0, rax
 
-    mov rax, qword [spriteSheet.frames.width]
+    mov rax, qword [spriteSheet.frames + 8]
     movq xmm1, rax
     
     ; Position
