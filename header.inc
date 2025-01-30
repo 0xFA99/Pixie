@@ -6,6 +6,8 @@ extrn CloseWindow
 extrn BeginDrawing
 extrn EndDrawing
 
+extrn DrawTexturePro
+
 extrn ClearBackground
 extrn LoadTexture
 extrn UnloadTexture

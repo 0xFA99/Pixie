@@ -82,10 +82,9 @@ _LoadSpriteSheetData:
     add rsp, 32
     pop rbp
 
-    call _gameLoop
+    jmp _gameLoop
 
 _FreeSpriteSheetData:
     mov rdi, [spriteSheet.frames]
     call free
-
 
