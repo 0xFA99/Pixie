@@ -2,6 +2,8 @@ extrn SetTargetFPS
 extrn InitWindow
 extrn WindowShouldClose
 extrn CloseWindow
+extrn GetScreenWidth
+extrn GetScreenHeight
 
 extrn BeginDrawing
 extrn EndDrawing

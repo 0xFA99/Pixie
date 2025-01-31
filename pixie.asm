@@ -5,6 +5,7 @@ include 'struct.inc'
 
 section '.text' executable
 public _start
+public _gameLoop
 
 _start:
 
@@ -35,6 +36,7 @@ _gameEnd:
 section '.data' writeable
 gameWindow GameWindow
 spriteSheet SpriteSheet
+playerPosition Vector2
 
 warriorSheet db "warrior.png"
 

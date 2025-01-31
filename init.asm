@@ -17,3 +17,14 @@
 
     call InitWindow
 
+    ; Init Player Position
+    call GetScreenWidth
+    sar eax, 1
+    cvtsi2ss xmm0, eax
+    movss [playerPosition], xmm0
+
+    call GetScreenHeight
+    sar eax, 1
+    cvtsi2ss xmm0, eax
+    movss [playerPosition + 4], xmm0
+

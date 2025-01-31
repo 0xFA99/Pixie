@@ -42,6 +42,7 @@ _LoadSpriteSheetData:
     jmp .L2
 
 .L3:
+
     mov eax, [rbp - 20]
     cdqe
     sal rax, 4
@@ -52,17 +53,21 @@ _LoadSpriteSheetData:
 
     mov edx, [rbp - 28]
     imul edx, [rbp - 12]
-    mov dword [rax], edx
+    cvtsi2ss xmm0, edx
+    movss [rax], xmm0
 
     mov edx, [rbp - 24]
     imul edx, [rbp - 16]
-    mov dword [rax + 4], edx
+    cvtsi2ss xmm0, edx
+    movss [rax + 4], xmm0
 
-    mov edx, [rbp - 28]
-    mov dword [rax + 8], edx
+    mov edx, [rbp - 12]
+    cvtsi2ss xmm0, edx
+    movss [rax + 8], xmm0
 
-    mov edx, [rbp - 24]
-    mov dword [rax + 12], edx
+    mov edx, [rbp - 16]
+    cvtsi2ss xmm0, edx
+    movss [rax + 12], xmm0
 
     add dword [rbp - 20], 1
     add dword [rbp - 28], 1
@@ -88,5 +93,4 @@ _FreeSpriteSheetData:
     mov rdi, [spriteSheet.frames]
     call free
 	ret
-
 

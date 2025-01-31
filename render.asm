@@ -4,41 +4,40 @@ _render:
     mov rdi, 0xFF181818
     call ClearBackground
 
-    ; Try Draw Sprite
-    ; texture, frame, position, origin, rotate, color
-
-    ; Texture
     sub rsp, 16
     mov rcx, rsp
 
+    ; Texture2D = texture
     mov rax, qword [spriteSheet.texture]
     mov rdx, qword [spriteSheet.texture + 8]
 
     mov [rcx], rax
     mov [rcx + 8], rdx
 
-    mov eax, dword [spriteSheet.texture.format]
+    mov eax, dword [spriteSheet.texture + 12]
     mov [rcx + 12], eax
 
-    ; Frame
-    mov rax, qword [spriteSheet.frames]
-    movq xmm0, rax
+    ; Rectangle = source
+    mov rax, [spriteSheet.frames]
+    movsd xmm0, [rax]
+    movsd xmm1, [rax + 8]
 
-    mov rax, qword [spriteSheet.frames + 8]
-    movq xmm1, rax
-    
-    ; Position
-    pxor xmm2, xmm2
-    movdqa xmm3, xmm2
+    ; Rectangle = dest
+    movsd xmm2, [playerPosition]
+    movsd xmm3, [rax + 8]
 
-    ; Offset
-    movdqa xmm4, xmm2
+    ; Vector2 = origin
+    pxor xmm4, xmm4
 
+    ; float = rotation
     pxor xmm5, xmm5
 
-    mov rdi, 0xFFFF0000
+    ; Color = tint
+    mov rdi, 0xFFFFFFFF
 
     call DrawTexturePro
+
     add rsp, 16
 
     call EndDrawing
+
