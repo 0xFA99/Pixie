@@ -1,0 +1,36 @@
+# Pixie - A Tiny Adventure in Assembly!
+
+Welcome to **Pixie**, a simple yet magical gmae written in **x64 assembly (FASM)** with the power of **Raylib**!
+This project is my journey into the mysterious realm of low-level programming, where every byte count and performance is king.
+
+## Getting Started
+### Requirements
+- Linux (x86_64)
+- [FASM](https://flatassembler.net/) (Flat Assembler)
+- [Raylib](https://www.raylib.com/)
+- `ld` (GNU linker)
+- `make`
+### Build & Run
+Clone the repo:
+```sh
+$ git clone https://github.com/0xFA99/Pixie.git
+$ cd Pixie
+```
+To build the project:
+```sh
+$ make
+```
+TO run the game:
+```sh
+$ ./Pixie
+```
+
+To clean up build files:
+```sh
+$ make clean
+```
+### TO-DO
+- [x] Draw Sprite
+- [ ] Add Sprite Animation
+- [ ] Add Movement
+- [ ] ...
