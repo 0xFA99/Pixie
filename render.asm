@@ -4,6 +4,20 @@ _render:
     mov rdi, 0xFF181818
     call ClearBackground
 
+    sub rsp, 0x20
+    mov rcx, rsp
+
+    mov rax, [camera2D]
+    mov rdx, [camera2D + 8]
+    mov [rcx], rax
+    mov [rcx + 8], rdx
+
+    mov rax, [camera2D + 16]
+    mov [rcx + 16], rax
+
+    call BeginMode2D
+    add rsp, 0x20
+
     sub rsp, 16
     mov rcx, rsp
 
@@ -39,5 +53,6 @@ _render:
 
     add rsp, 16
 
+    call EndMode2D
     call EndDrawing
 

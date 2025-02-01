@@ -21,6 +21,7 @@ _gameLoop:
     test al, al
     jnz _gameEnd
 
+include 'update.asm'
 include 'render.asm'
 
     jmp _gameLoop
@@ -35,9 +36,11 @@ _gameEnd:
 
 section '.data' writeable
 gameWindow GameWindow
+
+camera2D Camera2D
+
 spriteSheet SpriteSheet
 playerPosition Vector2
-
 warriorSheet db "warrior.png"
 
 section '.note.GNU-stack'

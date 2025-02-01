@@ -28,3 +28,27 @@
     cvtsi2ss xmm0, eax
     movss [playerPosition + 4], xmm0
 
+    ; Init Camera2D
+    mov eax, 2
+    cvtsi2ss xmm1, eax
+    pxor xmm0, xmm0
+
+    call GetScreenWidth
+    cvtsi2ss xmm0, eax
+    divss xmm0, xmm1
+    movss [camera2D.offset.x], xmm0
+
+    call GetScreenHeight
+    cvtsi2ss xmm0, eax
+    divss xmm0, xmm1
+    movss [camera2D.offset.y], xmm0
+
+    pxor xmm0, xmm0
+    movsd [camera2D.target], xmm0
+
+    movss [camera2D.rotation], xmm0
+
+    mov eax, 1
+    cvtsi2ss xmm0, eax
+    movss [camera2D.zoom], xmm0
+
