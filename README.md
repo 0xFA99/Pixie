@@ -31,6 +31,7 @@ $ make clean
 ```
 ### TO-DO
 - [x] Draw Sprite
+- [x] Add Camera2D
 - [ ] Add Sprite Animation
 - [ ] Add Movement
 - [ ] ...
