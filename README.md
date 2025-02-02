@@ -32,6 +32,7 @@ $ make clean
 ### TO-DO
 - [x] Draw Sprite
 - [x] Add Camera2D
+- [X] Add Flip Sprite (Left and Right)
 - [ ] Add Sprite Animation
 - [ ] Add Movement
 - [ ] ...

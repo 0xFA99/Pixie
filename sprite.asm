@@ -87,6 +87,77 @@ _LoadSpriteSheetData:
     add rsp, 32
     pop rbp
 
+_AddFlipSpriteSheetData:
+    push rbp
+    mov rbp, rsp
+    sub rsp, 40
+
+    mov eax, [spriteSheet.frameCount]
+    mov [rbp - 4], eax
+
+    add eax, eax
+    mov [rbp - 8], eax
+
+    cdqe
+    sal rax, 4
+    mov rdx, rax
+    mov rax, [spriteSheet.frames]
+
+    mov rdi, rax
+    mov rsi, rdx
+    call realloc
+    mov [spriteSheet.frames], eax
+
+    mov dword [rbp - 12], 0
+    jmp .L1
+
+.L2:
+    mov eax, [rbp - 12]
+    cdqe
+    sal rax, 4
+    mov rdx, rax
+    mov rax, [spriteSheet.frames]
+    add rax, rdx
+
+    movsd xmm0, [rax]
+    movsd [rbp - 20], xmm0
+
+    movss xmm0, [rax + 8]
+    movss [rbp - 28], xmm0
+
+    movss xmm0, [rax + 12]
+    movss [rbp - 32], xmm0
+
+    mov eax, [rbp - 4]
+    add eax, [rbp - 12]
+    cdqe
+    sal rax, 4
+    mov rdx, rax
+    mov rax, [spriteSheet.frames]
+    add rax, rdx
+
+    movsd xmm0, [rbp - 20]
+    movsd [rax], xmm0
+
+    movss xmm0, [rbp - 28]
+    mov edx, 0x80000000             ; -0.0 (Negative Zero)
+    movd xmm1, edx
+    xorps xmm0, xmm1
+    movss [rax + 8], xmm0
+
+    movss xmm0, [rbp - 32]
+    movss [rax + 12], xmm0
+
+    add dword [rbp - 12], 1
+
+.L1:
+    mov eax, dword [rbp - 12]
+    cmp eax, dword [rbp - 4]
+    jl .L2
+
+    add rsp, 40
+    pop rbp
+
     jmp _gameLoop
 
 _FreeSpriteSheetData:

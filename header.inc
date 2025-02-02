@@ -16,5 +16,6 @@ extrn ClearBackground
 extrn LoadTexture
 extrn UnloadTexture
 
+extrn realloc
 extrn malloc
 extrn free

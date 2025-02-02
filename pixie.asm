@@ -5,7 +5,6 @@ include 'struct.inc'
 
 section '.text' executable
 public _start
-public _gameLoop
 
 _start:
 
