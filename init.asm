@@ -52,3 +52,8 @@
     cvtsi2ss xmm0, eax
     movss [camera2D.zoom], xmm0
 
+    ; Camera zoom level
+    mov eax, 0x3D4CCCCD
+    movd xmm0, eax
+    movss [cameraZoomLevel], xmm0
+

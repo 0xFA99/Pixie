@@ -37,6 +37,7 @@ section '.data' writeable
 gameWindow GameWindow
 
 camera2D Camera2D
+cameraZoomLevel dd ?
 
 spriteSheet SpriteSheet
 playerPosition Vector2
