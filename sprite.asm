@@ -42,7 +42,6 @@ _LoadSpriteSheetData:
     jmp .L2
 
 .L3:
-
     mov eax, [rbp - 20]
     cdqe
     sal rax, 4
