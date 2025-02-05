@@ -17,16 +17,53 @@
 
     call InitWindow
 
-    ; Init Player Position
+    ; Init Player
+    push rbp
+    mov rbp, rsp
+    sub rsp, 32
+
     call GetScreenWidth
     sar eax, 1
     cvtsi2ss xmm0, eax
-    movss [playerPosition], xmm0
+    movss [rbp - 4], xmm0
 
     call GetScreenHeight
     sar eax, 1
     cvtsi2ss xmm0, eax
-    movss [playerPosition + 4], xmm0
+    movss [rbp - 8], xmm0
+
+    pxor xmm0, xmm0
+    movss [rbp - 12], xmm0
+    movss [rbp - 16], xmm0
+
+    mov eax, 0xC3480000     ; -200
+    movd xmm0, eax
+    movss [rbp - 20], xmm0
+
+    mov eax, 0x42c80000     ; 100
+    movd xmm0, eax
+    movss [rbp - 24], xmm0
+
+    mov rax, [player.movement]
+
+    movss xmm0, [rbp - 4]
+    movss [rax], xmm0
+    movss xmm0, [rbp - 8]
+    movss [rax - 4], xmm0
+
+    movss xmm0, [rbp - 12]
+    movss [rax - 8], xmm0
+    movss xmm0, [rbp - 16]
+    movss [rax - 12], xmm0
+
+    movss xmm0, [rbp - 20]
+    movss [rax - 16], xmm0
+
+    movss xmm0, [rbp - 24]
+    movss [rax - 20], xmm0
+
+    add rsp, 32
+    pop rbp
 
     ; Init Camera2D
     mov eax, 2

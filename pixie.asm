@@ -35,13 +35,10 @@ _gameEnd:
     syscall
 
 section '.data' writeable
-gameWindow GameWindow
-
-camera2D Camera2D
-cameraZoomLevel dd ?
-
-spriteSheet SpriteSheet
-playerPosition Vector2
-warriorSheet db "warrior.png"
+gameWindow          GameWindow
+camera2D            Camera2D
+cameraZoomLevel     dd ?
+player              Player
+warriorSheet        db "warrior.png"
 
 section '.note.GNU-stack'

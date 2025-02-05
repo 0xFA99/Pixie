@@ -1,5 +1,5 @@
 _LoadSpriteSheetData:
-    lea rax, [spriteSheet]
+    lea rax, [player.spriteSheet]
     lea rdx, [warriorSheet]
 
     mov rdi, rax
