@@ -22,22 +22,22 @@ _render:
     mov rcx, rsp
 
     ; Texture2D = texture
-    mov rax, qword [spriteSheet.texture]
-    mov rdx, qword [spriteSheet.texture + 8]
+    mov rax, qword [player.entity.spriteSheet.texture]
+    mov rdx, qword [player.entity.spriteSheet.texture + 8]
 
     mov [rcx], rax
     mov [rcx + 8], rdx
 
-    mov eax, dword [spriteSheet.texture + 12]
+    mov eax, dword [player.entity.spriteSheet.texture + 12]
     mov [rcx + 12], eax
 
     ; Rectangle = source
-    mov rax, [spriteSheet.frames]
+    mov rax, [player.entity.spriteSheet.frames]
     movsd xmm0, [rax]
     movsd xmm1, [rax + 8]
 
     ; Rectangle = dest
-    movsd xmm2, [playerPosition]
+    movsd xmm2, [player.movement]
     movsd xmm3, [rax + 8]
 
     ; Vector2 = origin

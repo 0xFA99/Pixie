@@ -1,7 +1,7 @@
 _UpdateCamera:
-    movsd xmm0, [playerPosition]
+    movsd xmm0, [player.movement]
 
-    mov rax, [spriteSheet.frames]
+    mov rax, [player.entity.spriteSheet.frames]
     movsd xmm1, [rax + 8]
 
     mov eax, 0x40000000

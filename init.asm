@@ -44,7 +44,7 @@
     movd xmm0, eax
     movss [rbp - 24], xmm0
 
-    mov rax, [player.movement]
+    mov rax, [player.movement.position]
 
     movss xmm0, [rbp - 4]
     movss [rax], xmm0
