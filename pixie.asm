@@ -1,5 +1,6 @@
 format ELF64
 
+include 'define.inc'
 include 'header.inc'
 include 'struct.inc'
 
