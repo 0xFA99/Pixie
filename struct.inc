@@ -31,6 +31,7 @@ struc Camera2D
 }
 
 ; PIXIE
+; GAME STRUCT -----
 struc GameWindow
 {
     .width      dd ?
@@ -38,10 +39,57 @@ struc GameWindow
     .title      db "Pixie", 0x00
 }
 
+; SPRITE STRUCT -----
 struc SpriteSheet
 {
     .texture    Texture
     .frames     Rectangle
     .frameCount dd ?
+}
+
+struc AnimationSequence
+{
+    .startFrame dd ?
+    .endFrame   dd ?
+    .frameRate  dd ?
+}
+
+struc AnimationState
+{
+    .animationSequence  AnimationSequence
+    .state      dd ?
+    .direction  dd ?
+}
+
+struc SpriteEntity
+{
+    .spriteSheet            SpriteSheet
+    .animationState         AnimationState
+    .animationStateCount    dd ?
+    .frameDuration          dd ?
+}
+
+; PLAYER STRUCT -----
+struc PlayerMovement
+{
+    .position       Vector2
+    .velocity       Vector2
+    .acceleration   dd ?
+    .speed          dd ?
+}
+
+struc PlayerStatus
+{
+    .state          dd ?
+    .direction      dd ?
+}
+
+struc Player
+{
+    .entity         SpriteEntity
+    .animation      AnimationState
+    .movement       PlayerMovement
+    .status         PlayerStatus
+    .currentFrame   dd ?
 }
 

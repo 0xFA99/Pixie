@@ -1,5 +1,5 @@
 _LoadSpriteSheetData:
-    lea rax, [spriteSheet]
+    lea rax, [player.entity.spriteSheet]
     lea rdx, [warriorSheet]
 
     mov rdi, rax
@@ -15,24 +15,24 @@ _LoadSpriteSheetData:
     
     mov eax, [rbp - 4]
     imul eax, [rbp - 8]
-    mov [spriteSheet.frameCount], eax
+    mov [player.entity.spriteSheet.frameCount], eax
 
-    mov eax, [spriteSheet.texture.width]
+    mov eax, [player.entity.spriteSheet.texture.width]
     mov ecx, [rbp - 8]
     idiv ecx
     mov [rbp - 12], eax                         ; Width
 
-    mov eax, [spriteSheet.texture.height]
+    mov eax, [player.entity.spriteSheet.texture.height]
     mov ecx, [rbp - 4]
     idiv ecx 
     mov [rbp - 16], eax                         ; Height
 
-    mov eax, [spriteSheet.frameCount]
+    mov eax, [player.entity.spriteSheet.frameCount]
     cdqe
     sal rax, 4
     mov rdi, rax
     call malloc
-    mov [spriteSheet.frames], rax
+    mov [player.entity.spriteSheet.frames], rax
 
     mov dword [rbp - 20], 0                     ; Counter
     mov dword [rbp - 24], 0                     ; Row index
@@ -47,7 +47,7 @@ _LoadSpriteSheetData:
     sal rax, 4
     mov rdx, rax
 
-    mov rax, [spriteSheet.frames]
+    mov rax, [player.entity.spriteSheet.frames]
     add rax, rdx
 
     mov edx, [rbp - 28]
@@ -91,7 +91,7 @@ _AddFlipSpriteSheetData:
     mov rbp, rsp
     sub rsp, 40
 
-    mov eax, [spriteSheet.frameCount]
+    mov eax, [player.entity.spriteSheet.frameCount]
     mov [rbp - 4], eax
 
     add eax, eax
@@ -100,12 +100,12 @@ _AddFlipSpriteSheetData:
     cdqe
     sal rax, 4
     mov rdx, rax
-    mov rax, [spriteSheet.frames]
+    mov rax, [player.entity.spriteSheet.frames]
 
     mov rdi, rax
     mov rsi, rdx
     call realloc
-    mov [spriteSheet.frames], eax
+    mov [player.entity.spriteSheet.frames], eax
 
     mov dword [rbp - 12], 0
     jmp .L1
@@ -115,7 +115,7 @@ _AddFlipSpriteSheetData:
     cdqe
     sal rax, 4
     mov rdx, rax
-    mov rax, [spriteSheet.frames]
+    mov rax, [player.entity.spriteSheet.frames]
     add rax, rdx
 
     movsd xmm0, [rax]
@@ -132,7 +132,7 @@ _AddFlipSpriteSheetData:
     cdqe
     sal rax, 4
     mov rdx, rax
-    mov rax, [spriteSheet.frames]
+    mov rax, [player.entity.spriteSheet.frames]
     add rax, rdx
 
     movsd xmm0, [rbp - 20]
@@ -160,7 +160,7 @@ _AddFlipSpriteSheetData:
     jmp _gameLoop
 
 _FreeSpriteSheetData:
-    mov rdi, [spriteSheet.frames]
+    mov rdi, [player.entity.spriteSheet.frames]
     call free
 	ret
 
