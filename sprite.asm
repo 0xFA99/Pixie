@@ -1,166 +1,146 @@
-_LoadSpriteSheetData:
-    lea rax, [player.entity.spriteSheet]
-    lea rdx, [warriorSheet]
-
-    mov rdi, rax
-    mov rsi, rdx
-    call LoadTexture
-
+_LoadSpriteSheet:
     push rbp
     mov rbp, rsp
-    sub rsp, 32
 
-    mov dword [rbp - 4], 17                     ; Rows
-    mov dword [rbp - 8], 6                      ; Columns
-    
-    mov eax, [rbp - 4]
-    imul eax, [rbp - 8]
-    mov [player.entity.spriteSheet.frameCount], eax
+    sub rsp, 72
 
-    mov eax, [player.entity.spriteSheet.texture.width]
-    mov ecx, [rbp - 8]
+    mov [rbp - 8], rdi      ; warriorSheet
+    mov [rbp - 12], esi     ; rows
+    mov [rbp - 16], edx     ; column
+
+    ; [rbp - 20] = width
+    ; [rbp - 24] = height
+    ; [rbp - 28] = counter
+    ; [rbp - 32] = index row
+    ; [rbp - 36] = index column
+
+    ; [rbp - 72] = struct SpriteSheet - texture.id
+    ; [rbp - 48] = struct SpriteSheet - *frames
+    ; [rbp - 40] = struct SpriteSheet - frameCount
+
+    lea rdi, [rbp - 72]
+    mov rsi, [rbp - 8]
+    call LoadTexture
+
+    ; if texture.id 0
+    cmp dword [rbp - 72], 0
+    je .printErrorLoadTexture
+
+    ; frameCount = rows * column
+    mov eax, [rbp - 12]
+    imul eax, [rbp - 16]
+    mov [rbp - 40], eax
+
+    ; width = texture.width / columns
+    mov eax, [rbp - 68]
+    mov ecx, [rbp - 16]
     idiv ecx
-    mov [rbp - 12], eax                         ; Width
+    mov [rbp - 20], eax
 
-    mov eax, [player.entity.spriteSheet.texture.height]
-    mov ecx, [rbp - 4]
-    idiv ecx 
-    mov [rbp - 16], eax                         ; Height
+    ; height = texture.height / rows
+    mov eax, [rbp - 64]
+    mov ecx, [rbp - 12]
+    idiv ecx
+    mov [rbp - 24], ecx
 
-    mov eax, [player.entity.spriteSheet.frameCount]
+    ; frames = malloc
+    mov eax, [rbp - 40]
     cdqe
-    sal rax, 4
+    sal rax, 4                      ; 16 bytes
     mov rdi, rax
     call malloc
-    mov [player.entity.spriteSheet.frames], rax
+    mov [rbp - 48], rax
+   
+   ; if frame == NULL
+   cmp qword [rbp - 48], 0
+   je .printErrorAllocation
 
-    mov dword [rbp - 20], 0                     ; Counter
-    mov dword [rbp - 24], 0                     ; Row index
+    mov dword [rbp - 28], 0         ; counter
+    mov dword [rbp - 32], 0         ; index row
+
+    jmp .L1
 
 .L4:
-    mov dword [rbp - 28], 0                     ; Column Index
+    mov dword [rbp - 36], 0         ; index column
     jmp .L2
 
 .L3:
-    mov eax, [rbp - 20]
+    mov eax, [rbp - 28]
     cdqe
     sal rax, 4
     mov rdx, rax
 
-    mov rax, [player.entity.spriteSheet.frames]
+    mov rax, [rbp - 48]
     add rax, rdx
 
-    mov edx, [rbp - 28]
-    imul edx, [rbp - 12]
+    mov edx, [rbp - 36]
+    imul edx, [rbp - 20]
     cvtsi2ss xmm0, edx
     movss [rax], xmm0
 
-    mov edx, [rbp - 24]
-    imul edx, [rbp - 16]
+    mov edx, [rbp - 32]
+    imul edx, [rbp - 24]
     cvtsi2ss xmm0, edx
     movss [rax + 4], xmm0
 
-    mov edx, [rbp - 12]
+    mov edx, [rbp - 20]
     cvtsi2ss xmm0, edx
     movss [rax + 8], xmm0
 
-    mov edx, [rbp - 16]
+    mov edx, [rbp - 24]
     cvtsi2ss xmm0, edx
     movss [rax + 12], xmm0
 
-    add dword [rbp - 20], 1
-    add dword [rbp - 28], 1
+    add dword [rbp - 28], 1         ; counter++
+    add dword [rbp - 36], 1         ; column++
 
 .L2:
-    mov eax, [rbp - 28]
-    cmp eax, [rbp - 8]
+    mov eax, [rbp - 36]
+    cmp eax, [rbp - 16]             ; column < clumn
     jl .L3
 
-    add dword [rbp - 24], 1
+    add dword [rbp - 32], 1         ; row++
 
 .L1:
-    mov eax, [rbp - 24]
-    cmp eax, [rbp - 4]
+    mov eax, [rbp - 32]
+    cmp eax, [rbp - 12]             ; row < rows
     jl .L4
 
-    add rsp, 32
+    ; Return
+    lea rcx, [rbp + 56]
+
+    mov rax, [rbp - 72]
+    mov rdx, [rbp - 64]
+    mov [rcx], rax
+    mov [rcx + 8], rdx
+
+    mov eax, [rbp - 56]
+    mov [rcx + 16], eax             ; texture
+
+    mov rax, [rbp - 48]
+    mov [rcx + 20], rax             ; frames*
+
+    mov eax, [rbp - 40]
+    mov [rcx + 36], eax             ; frameCount
+
+.return:
+    add rsp, 72
+
+    mov rsp, rbp
     pop rbp
+    ret
 
-_AddFlipSpriteSheetData:
-    push rbp
-    mov rbp, rsp
-    sub rsp, 40
+.printErrorLoadTexture:
+    lea edi, [stringFormat]
+    lea esi, [failedLoadTexture]
+    call printf
 
-    mov eax, [player.entity.spriteSheet.frameCount]
-    mov [rbp - 4], eax
+    jmp .return
 
-    add eax, eax
-    mov [rbp - 8], eax
+.printErrorAllocation:
+    lea edi, [stringFormat]
+    lea esi, [failedAllocationMemory]
+    call printf
 
-    cdqe
-    sal rax, 4
-    mov rdx, rax
-    mov rax, [player.entity.spriteSheet.frames]
-
-    mov rdi, rax
-    mov rsi, rdx
-    call realloc
-    mov [player.entity.spriteSheet.frames], eax
-
-    mov dword [rbp - 12], 0
-    jmp .L1
-
-.L2:
-    mov eax, [rbp - 12]
-    cdqe
-    sal rax, 4
-    mov rdx, rax
-    mov rax, [player.entity.spriteSheet.frames]
-    add rax, rdx
-
-    movsd xmm0, [rax]
-    movsd [rbp - 20], xmm0
-
-    movss xmm0, [rax + 8]
-    movss [rbp - 28], xmm0
-
-    movss xmm0, [rax + 12]
-    movss [rbp - 32], xmm0
-
-    mov eax, [rbp - 4]
-    add eax, [rbp - 12]
-    cdqe
-    sal rax, 4
-    mov rdx, rax
-    mov rax, [player.entity.spriteSheet.frames]
-    add rax, rdx
-
-    movsd xmm0, [rbp - 20]
-    movsd [rax], xmm0
-
-    movss xmm0, [rbp - 28]
-    mov edx, 0x80000000             ; -0.0 (Negative Zero)
-    movd xmm1, edx
-    xorps xmm0, xmm1
-    movss [rax + 8], xmm0
-
-    movss xmm0, [rbp - 32]
-    movss [rax + 12], xmm0
-
-    add dword [rbp - 12], 1
-
-.L1:
-    mov eax, dword [rbp - 12]
-    cmp eax, dword [rbp - 4]
-    jl .L2
-
-    add rsp, 40
-    pop rbp
-
-    jmp _gameLoop
-
-_FreeSpriteSheetData:
-    mov rdi, [player.entity.spriteSheet.frames]
-    call free
-	ret
+    jmp .return
 
