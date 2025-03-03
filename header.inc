@@ -11,10 +11,12 @@ extrn BeginDrawing
 extrn EndDrawing
 extrn ClearBackground
 extrn LoadTexture
+extrn DrawTexture
 
 ; ======================
 ;        STDLIB 
 ; ======================
 extrn printf
 extrn malloc
+extrn realloc
 
