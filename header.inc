@@ -20,3 +20,14 @@ extrn printf
 extrn malloc
 extrn realloc
 
+; ======================
+;         PIXIE 
+; ======================
+STATE_IDLE      equ 0
+STATE_RUN       equ 1
+STATE_JUMP      equ 2
+STATE_FALL      equ 3
+
+DIRECTION_LEFT  equ 0
+DIRECTION_RIGHT equ 1
+

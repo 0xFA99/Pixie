@@ -11,18 +11,23 @@ public _DEBUG
 
 include 'init.asm'
 include 'sprite.asm'
+include 'animations.asm'
 include 'render.asm'
 
 _start:
+
     mov edi, 800
     mov esi, 450
     lea edx, [gameWindow.title]
     call InitWindow
 
-    lea rdi, [player]
+    lea edi, [player]
     call _InitPlayer
 
-_DEBUG:
+    lea eax, [player]
+    movss xmm0, [rax + 32]
+    movss xmm1, [rax + 36]
+
     sub rsp, 48
     lea rdi, [warriorSheet]
     mov esi, 17                 ; rows
@@ -43,6 +48,21 @@ _DEBUG:
     lea rdi, [player]
     call _AddFlipSpriteSheet
 
+_DEBUG:
+    lea rdi, [player]
+    mov esi, STATE_IDLE
+    mov edx, DIRECTION_RIGHT
+    mov ecx, 0
+    mov r8d, 5
+    mov r9d, 10
+    call _AddAnimationState
+
+    lea rdi, [player]
+    mov esi, STATE_IDLE
+    mov edx, DIRECTION_RIGHT
+    call _SetPlayerAnimation
+
+    mov edi, 60
     call SetTargetFPS
 
 _gameLoop:
@@ -50,7 +70,13 @@ _gameLoop:
     test al, al
     jnz _gameEnd
 
+    ; call BeginDrawing
+
+    ; mov edi, 0xFF181818
+    ; call ClearBackground
     call _render
+
+    ; call EndDrawing
 
     jmp _gameLoop
 

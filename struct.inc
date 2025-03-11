@@ -37,7 +37,7 @@ struc GameWindow
 struc SpriteSheet
 {
     .texture                Texture
-    .frames                 Rectangle
+    .frames                 dq ?            ; Rectangle*
     .frameCount             dd ?
 }
 
@@ -58,7 +58,7 @@ struc AnimationState
 struc SpriteEntity
 {
     .spriteSheet            SpriteSheet
-    .animationState         AnimationState
+    .animationStates        dq ?            ; AnimationState*
     .animationStateCount    dd ?
     .frameDuration          dd ?
 }
@@ -79,8 +79,8 @@ struc Status
 
 struc Player
 {
-    .entity                 SpriteEntity
-    .animation              AnimationState
+    .entity                 dq ?           ; SpriteEntity*
+    .animation              dq ?           ; AnimationState*
     .movement               Movement
     .status                 Status
     .currentFrame           dd ?

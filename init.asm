@@ -3,31 +3,36 @@ _InitPlayer:
     push rbp
     mov rbp, rsp
 
-    sub rsp, 16
+    sub rsp, 8
   
-    mov [rsp + 8], rdi
+    mov [rbp - 8], rdi
 
-    mov rdi, 56
+    mov edi, 56
     call malloc
-    mov [rsp + 8], rax
-    cmp dword [rsp + 8], 0
+    test rax, rax
     je .printErrorAllocation
 
-    mov rax, [rsp + 8]
+    mov rdx, rax
+
+    mov rax, [rbp - 8]
+    mov [rax], rdx          ; SpriteEntity*
+
+    mov qword [rax + 8], 0  ; Animation*
+
     pxor xmm0, xmm0
-    movsd [rax + 16], xmm0  ; 16, 20
-    movsd [rax + 24], xmm0  ; 24, 28
+    movsd [rax + 16], xmm0  ; movement.position
+    movsd [rax + 24], xmm0  ; movement.velocity
 
     mov edx, -200.0f
     movd xmm0, edx
-    movss [rax + 32], xmm0
+    movss [rax + 32], xmm0  ; movement.acceleration
 
     mov edx, 100.0f
     movd xmm0, edx
-    movss [rax + 36], xmm0
+    movss [rax + 36], xmm0  ; movement.speed
 
 .return:
-    add rsp, 16
+    add rsp, 8
 
     pop rbp
     ret
