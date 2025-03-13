@@ -1,3 +1,4 @@
+public _render
 _render:
     push rbp
     mov rbp, rsp
@@ -8,13 +9,15 @@ _render:
     mov edi, 0xFF181818
     call ClearBackground
 
-    mov rax, [player]
-    mov rdx, [player + 8]
-    mov [rsp], rax
-    mov [rsp + 8], rdx
+    lea rax, [player]
+    mov rax, [rax]
 
-    mov eax, [player + 12]
-    mov [rsp + 12], eax
+    mov rdx, [rax]
+    mov rcx, [rax + 8]
+    mov [rsp], rdx
+    mov [rsp + 8], rcx
+    mov edx, [rax + 12]
+    mov [rsp + 12], edx
 
     mov edi, 100
     mov esi, 100

@@ -15,7 +15,6 @@ include 'animations.asm'
 include 'render.asm'
 
 _start:
-
     mov edi, 800
     mov esi, 450
     lea edx, [gameWindow.title]
@@ -33,16 +32,23 @@ _start:
     mov esi, 17                 ; rows
     mov edx, 6                  ; column
     call _LoadSpriteSheet
-    mov rax, [rsp]
-    mov rdx, [rsp + 8]
-    mov [player], rax
-    mov [player + 8], rdx
-    mov rax, [rsp + 16]
-    mov [player + 16], rax
-    mov rax, [rsp + 24]
-    mov rdx, [rsp + 32]
-    mov [player + 24], rax
-    mov [player + 32], rdx
+
+    lea rax, [player]
+    mov rax, [rax]
+
+    mov rdx, [rsp]
+    mov rcx, [rsp + 8]
+    mov [rax], rdx
+    mov [rax + 8], rcx
+
+    mov rdx, [rsp + 16]
+    mov [rax + 16], rdx
+
+    mov rdx, [rsp + 24]
+    mov rcx, [rsp + 32]
+    mov [rax + 24], rdx
+    mov [rax + 32], rcx
+
     add rsp, 48
 
     lea rdi, [player]
@@ -57,10 +63,10 @@ _DEBUG:
     mov r9d, 10
     call _AddAnimationState
 
-    lea rdi, [player]
-    mov esi, STATE_IDLE
-    mov edx, DIRECTION_RIGHT
-    call _SetPlayerAnimation
+    ; lea rdi, [player]
+    ; mov esi, STATE_IDLE
+    ; mov edx, DIRECTION_RIGHT
+    ; call _SetPlayerAnimation
 
     mov edi, 60
     call SetTargetFPS
@@ -70,13 +76,7 @@ _gameLoop:
     test al, al
     jnz _gameEnd
 
-    ; call BeginDrawing
-
-    ; mov edi, 0xFF181818
-    ; call ClearBackground
     call _render
-
-    ; call EndDrawing
 
     jmp _gameLoop
 

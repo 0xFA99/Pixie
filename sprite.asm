@@ -144,6 +144,7 @@ _AddFlipSpriteSheet:
     je .printSpriteSheetEmpty
 
     mov rax, [rbp - 8]
+    mov rax, [rax]
     mov edx, [rax + 32]
     mov dword [rbp - 12], edx       ; ori frames
     add edx, edx
@@ -154,9 +155,11 @@ _AddFlipSpriteSheet:
     sal rax, 4
     mov rsi, rax
     mov rax, [rbp - 8]
+    mov rax, [rax]
     mov rdi, [rax + 24]
     call realloc
     mov rcx, [rbp - 8]
+    mov rcx, [rcx]
     mov [rcx + 24], rax
 
     cmp qword [rcx + 24], 0
@@ -172,6 +175,7 @@ _AddFlipSpriteSheet:
     sal rax, 4
     mov rdx, rax
     mov rax, [rbp - 8]
+    mov rax, [rax]
     mov rax, [rax + 24]
     add rax, rdx
 
@@ -190,6 +194,7 @@ _AddFlipSpriteSheet:
     sal rax, 4
     mov rdx, rax
     mov rax, [rbp - 8]
+    mov rax, [rax]
     mov rax, [rax + 24]
     add rax, rdx
 
@@ -213,6 +218,11 @@ _AddFlipSpriteSheet:
     jl .L2
  
 .return:
+    mov edx, [rbp - 16]
+    mov rax, [rbp - 8]
+    mov rax, [rax]
+    mov [rax + 32], edx
+
     add rsp, 48
 
     pop rbp
