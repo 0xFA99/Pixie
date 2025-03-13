@@ -57,10 +57,10 @@ _start:
     mov r9d, 10
     call _AddAnimationState
 
-    ; lea rdi, [player]
-    ; mov esi, STATE_IDLE
-    ; mov edx, DIRECTION_RIGHT
-    ; call _SetPlayerAnimation
+    lea rdi, [player]
+    mov esi, STATE_IDLE
+    mov edx, DIRECTION_RIGHT
+    call _SetPlayerAnimation
 
     mov edi, 60
     call SetTargetFPS

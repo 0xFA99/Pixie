@@ -6,8 +6,7 @@
 ; [rbp - 28],   r9d = FPS
 
 ; [rbp - 36],   struct AnimationState*
-public _AddAnimationState
-public _AddAnimationState.reAllocation
+public _AddAnimationState.addAnimation
 _AddAnimationState:
     push rbp
     mov rbp, rsp
@@ -21,10 +20,6 @@ _AddAnimationState:
     mov [rbp - 24], r8d
     mov [rbp - 28], r9d
 
-; if (entity->animationStateCount <= 0) {
-;     entity->animationStates = (struct AnimationState *)malloc(sizeof(struct AnimationState));
-;     entity->animationStateCount = 0;
-; }
     mov rax, [rbp - 8]
     mov rax, [rax]
     mov eax, [rax + 48]
@@ -112,15 +107,12 @@ _AddAnimationState:
 ; [rbp - 16], direction
 ; [rbp - 20], index
 ; [rbp - 40], struct AnimationStates
+public _SetPlayerAnimation
 _SetPlayerAnimation:
     push rbp
     mov rbp, rsp
 
     sub rsp, 40
-
-    ; mov [rbp - 40], rdi
-    ; mov [rbp - 44], esi
-    ; mov [rbp - 48], edx
 
     mov [rbp - 8], rdi
     mov [rbp - 12], esi
@@ -128,80 +120,73 @@ _SetPlayerAnimation:
 
     mov dword [rbp - 20], 0 ; index
 
-    ; mov dword [rbp - 4], 0  ; index
-
     jmp .L1
 
 .L3:
-    ; mov rax, [rbp - 40]
-    ; mov rax, [rax]
-    ; mov rdx, [rax + 40]
-    ; mov eax, [rbp - 4]
-    ; imul eax, 20
-    ; cdqe
-    ; add rdx, rax
+;   player->entity->animationStates[i];
+    mov rax, [rbp - 8]
+    mov rax, [rax]
+    mov rdx, [rax + 40]
+    mov eax, [rbp - 4]
+    imul eax, 20
+    cdqe
+    add rdx, rax
 
-    ; mov rax, [rdx]
-    ; mov rcx, [rdx + 8]
-    ; mov [rbp - 32], rax
-    ; mov [rbp - 24], rcx
-    ; mov eax, [rdx + 16]
-    ; mov [rbp - 16], eax
-    
-    ; mov rax, [rbp - 40]
-    ; mov rax, [rax]
-    ; mov rdx, [rax + 40]
-    ; mov eax, [rbp - 4]
-    ; imul eax, 20
-    ; cdqe
-    ; add rdx, rax
+;   struct AnimationState animationState = player->entity->animationStates[i];
+    mov rax, [rdx]
+    mov rcx, [rdx + 8]
+    mov [rbp - 28], rax 
+    mov [rbp - 36], rcx
+    mov eax, [rdx + 16]
+    mov [rbp - 40], eax
 
-    ; mov rax, [rdx]
-    ; mov rcx, [rdx + 8]
-    ; mov [rbp - 32], rax
-    ; mov [rbp - 24], rcx
-    ; mov eax, [rcx + 16]
-    ; mov [rbp - 16], eax
+;   if (animationState.state == state && animationState.direction == direction) {
+    mov eax, [rbp - 32]
+    cmp [rbp - 12], eax
+    jne .L2
 
-    ; mov eax, [rbp - 20]
-    ; cmp [rbp - 44], eax
-    ; jne .L2
+    mov eax, [rbp - 40]
+    cmp [rbp - 16], eax
+    jne .L2
 
-    ; mov eax, [rbp - 16]
-    ; mov [rbp - 48], eax
-    ; jne .L2
+;   player->animation = &player->entity->animationStates[i];
+    mov rax, [rbp - 8]
+    mov rax, [rax]
+    mov rdx, [rax + 40]
+    mov eax, [rbp - 20]
+    cdqe
+    add rdx, rax
 
-    ; mov rax, [rbp - 40]
-    ; mov rax, [rax]
-    ; mov rdx, [rax + 40]
-    ; mov eax, [rbp - 4]
-    ; imul eax, 20
-    ; cdqe
-    ; add rdx, rax
+    mov rax, [rbp - 8]
+    lea rax, [rax + 8]
+    mov [rax], rdx
 
-    ; mov rax, [rbp - 40]
-    ; mov [rax + 8], rdx      ; player->animation
-   
-    ; mov rax, [rbp - 40]
-    ; mov rdx, [rax + 40]
-    ; mov eax, [rbp - 4]
-    ; imul eax, 20
-    ; cdqe
-    ; add rdx, rax
-    ; mov ecx, [rdx]
-    ; mov rax, [rbp - 40]
-    ; mov [rax + 48], ecx     ; player->currentFrame
+;   player->currentFrame = player->entity->animationStates[i].animationSequence.startFrameIndex;
+    mov rax, [rbp - 8]
+    mov rax, [rax]
+    mov rdx, [rax + 40]
+    mov eax, [rbp - 20]
+    cdqe
+    add rdx, rax
+    mov ecx, [rdx]
 
-    ; mov rax, [rbp - 40]
-    ; mov edx, [rbp - 44]
-    ; mov [rax + 40], edx     ; player->state
-    ; mov edx, [rbp - 48]
-    ; mov [rax + 44], edx     ; player->direction
+    mov rax, [rbp - 8]
+    mov [rax + 48], ecx
+
+;   player->status.state = state;
+    mov edx, [rbp - 12]
+    mov [rax + 40], edx
+
+;   player->status.direction = direction
+    mov edx, [rbp - 16]
+    mov [rax + 44], edx
 
 .L2:
     add dword [rbp - 20], 1
 
 .L1:
+
+;   for (int i = 0; i < player->entity->animationStateCount; i++) {
     mov rax, [rbp - 8]
     mov rax, [rax]
     mov eax, [rax + 48]
