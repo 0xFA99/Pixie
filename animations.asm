@@ -1,94 +1,3 @@
-; rdi = struct SpriteEntity*
-; esi = enum state
-; edx = enum direction
-; ecx = int start
-; r8d = int end
-; r9d = int FPS
-
-; public _AddAnimationState
-; _AddAnimationState:
-;     push rbp
-;     mov rbp, rsp
-;     sub rsp, 64
-; 
-;     mov qword [rbp - 40], rdi
-;     mov dword [rbp - 44], esi
-;     mov dword [rbp - 48], edx
-;     mov dword [rbp - 52], ecx
-;     mov dword [rbp - 56], r8d
-;     mov dword [rbp - 60], r9d
-; 
-;     mov rax, [rbp - 40]
-;     mov rax, [rax]
-;     mov rax, [rax + 40]
-;     test rax, rax
-;     jne .reAllocation
-; 
-;     ; Allocated 20 bytes (sizeof AnimationState)
-;     mov edi, 20
-;     call malloc
-;     mov rdx, [rbp - 40]
-;     mov rdx, [rdx]
-;     mov [rdx + 40], rax
-; 
-;     ; AnimationStateCount = 0
-;     ; mov rax, [rdx + 8]
-;     ; mov dword [rax + 48], 4
-; 
-;     jmp .addAnimation
-;     
-; .return:
-;     add rsp, 64
-; 
-;     pop rbp
-;     ret
-; 
-; .reAllocation:
-;     mov rax, [rbp - 40]
-;     mov rax, [rax]
-;     mov rdx, [rax + 40]
-;     mov eax, [rax + 48]
-;     add eax, 1
-;     imul eax, 20
-;     cdqe
-;     mov rsi, rax
-;     mov rdi, rdx
-;     call realloc
-;     mov rdx, [rbp - 40]
-;     mov rdx, [rdx]
-;     mov [rdx + 40], rax
-; 
-; .addAnimation:
-;     mov rax, [rbp - 40]
-;     mov rax, [rax]
-;     mov rdx, [rax + 40]
-;     mov eax, [rax + 48]
-;     imul eax, 20
-;     cdqe
-;     ; add rdx, rax
-;     ; mov [rbp - 16], rdx
-;     mov rax, rdx
-; 
-;     ; mov rax, [rbp - 16]
-;     mov edx, [rbp - 52]
-;     mov ecx, [rbp - 56]
-;     mov [rax], edx
-;     mov [rax + 4], ecx
-;     pxor xmm0, xmm0
-;     cvtsi2ss xmm0, [rbp - 60]
-;     movss [rax + 8], xmm0
-; 
-;     mov edx, [rbp - 44]
-;     mov [rax + 12], edx
-;     mov edx, [rbp - 48]
-;     mov [rax + 16], edx
-; 
-;     mov rax, [rbp - 40]
-;     mov rax, [rax]
-;     add dword [rax + 48], 1
-; 
-;     jmp .return
-
 ; [rbp - 8],    rdi = entity*
 ; [rbp - 12],   esi = state
 ; [rbp - 16],   edx = direction
@@ -98,6 +7,7 @@
 
 ; [rbp - 36],   struct AnimationState*
 public _AddAnimationState
+public _AddAnimationState.reAllocation
 _AddAnimationState:
     push rbp
     mov rbp, rsp
@@ -111,16 +21,18 @@ _AddAnimationState:
     mov [rbp - 24], r8d
     mov [rbp - 28], r9d
 
-    ; if animationStateCount >= 0
+; if (entity->animationStateCount <= 0) {
+;     entity->animationStates = (struct AnimationState *)malloc(sizeof(struct AnimationState));
+;     entity->animationStateCount = 0;
+; }
     mov rax, [rbp - 8]
     mov rax, [rax]
     mov eax, [rax + 48]
     cmp eax, 0
-    je .reAllocation
+    jg .reAllocation
 
     ; Allocation memory for animationStates
     ; 20 bytes (struct AnimationState)
-
     mov edi, 20
     call malloc
     mov rdx, [rbp - 8]
@@ -135,7 +47,7 @@ _AddAnimationState:
 .reAllocation:
     mov rax, [rbp - 8]
     mov rax, [rax]
-    mov rdx, [rax + 40]
+    lea rdx, [rax + 40]
     mov eax, [rax + 48]
     add eax, 1
     imul eax, 20

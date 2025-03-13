@@ -1,10 +1,10 @@
-
+; rdi = Player*
+; [rbp - 8], Player*
 _InitPlayer:
     push rbp
     mov rbp, rsp
 
     sub rsp, 8
-  
     mov [rbp - 8], rdi
 
     mov edi, 56
@@ -12,12 +12,9 @@ _InitPlayer:
     test rax, rax
     je .printErrorAllocation
 
-    mov rdx, rax
-
-    mov rax, [rbp - 8]
-    mov [rax], rdx          ; SpriteEntity*
-
-    mov qword [rax + 8], 0  ; Animation*
+    ; Allocation memory for player.entity
+    mov rdx, [rbp - 8]
+    mov [rdx], rax
 
     pxor xmm0, xmm0
     movsd [rax + 16], xmm0  ; movement.position
@@ -43,3 +40,4 @@ _InitPlayer:
     call printf
 
     jmp .return
+

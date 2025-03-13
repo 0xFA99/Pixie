@@ -7,7 +7,6 @@ include 'string.inc'
 section '.text' executable
 
 public _start
-public _DEBUG
 
 include 'init.asm'
 include 'sprite.asm'
@@ -22,10 +21,6 @@ _start:
 
     lea edi, [player]
     call _InitPlayer
-
-    lea eax, [player]
-    movss xmm0, [rax + 32]
-    movss xmm1, [rax + 36]
 
     sub rsp, 48
     lea rdi, [warriorSheet]
@@ -54,7 +49,6 @@ _start:
     lea rdi, [player]
     call _AddFlipSpriteSheet
 
-_DEBUG:
     lea rdi, [player]
     mov esi, STATE_IDLE
     mov edx, DIRECTION_RIGHT
