@@ -22,7 +22,12 @@ _start:
     lea edi, [player]
     call _InitPlayer
 
+    lea edi, [camera]
+    lea esi, [player]
+    call _InitCamera
+
     sub rsp, 48
+
     lea rdi, [warriorSheet]
     mov esi, 17                 ; rows
     mov edx, 6                  ; column
@@ -30,15 +35,12 @@ _start:
 
     lea rax, [player]
     mov rax, [rax]
-
     mov rdx, [rsp]
     mov rcx, [rsp + 8]
     mov [rax], rdx
     mov [rax + 8], rcx
-
     mov rdx, [rsp + 16]
     mov [rax + 16], rdx
-
     mov rdx, [rsp + 24]
     mov rcx, [rsp + 32]
     mov [rax + 24], rdx
@@ -75,9 +77,21 @@ _gameLoop:
     mov edi, 0xFF181818
     call ClearBackground
 
+    sub rsp, 16
+    lea rax, [camera]
+    mov rdx, [rax]
+    mov rcx, [rax + 8]
+    mov [rsp], rdx
+    mov [rsp + 8], rcx
+    mov rdx, [rax + 16]
+    mov [rsp + 16], rdx
+    call BeginMode2D
+    add rsp, 16
+
     lea rdi, [player]
     call _RenderPlayer
 
+    call EndMode2D
     call EndDrawing
 
     jmp _gameLoop
@@ -92,6 +106,7 @@ _gameEnd:
 section '.data' writeable
 
 gameWindow      GameWindow
+camera          Camera
 player          Player
 warriorSheet    db "warrior.png", 0x00
 

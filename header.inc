@@ -9,9 +9,10 @@ extrn GetScreenWidth
 extrn GetScreenHeight
 extrn BeginDrawing
 extrn EndDrawing
+extrn BeginMode2D
+extrn EndMode2D
 extrn ClearBackground
 extrn LoadTexture
-extrn DrawTexture
 extrn DrawTexturePro
 
 ; ======================

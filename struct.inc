@@ -24,6 +24,14 @@ struc Texture
     .format                 dd ?
 }
 
+struc Camera
+{
+    .offset                 Vector2
+    .target                 Vector2
+    .rotation               dd ?
+    .zoom                   dd ?
+}
+
 ; ======================
 ;         Pixie 
 ; ======================
