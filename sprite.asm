@@ -128,11 +128,7 @@ _LoadSpriteSheet:
 
     jmp .return
 
-; rdi = SpriteSheet*
-; -------------------------
-; [rbp - 8]     SpriteSheet*
-; [rbp - 12]    new frames
-; [rbp - 16]    index i
+; rdi = Player*
 _AddFlipSpriteSheet:
     push rbp
     mov rbp, rsp
@@ -140,105 +136,78 @@ _AddFlipSpriteSheet:
 
     mov [rbp - 8], rdi
 
-    cmp dword [rbp - 8], 0
-    je .printSpriteSheetEmpty
-
     mov rax, [rbp - 8]
     mov rax, [rax]
-    mov edx, [rax + 32]
-    mov dword [rbp - 12], edx       ; ori frames
-    add edx, edx
-    mov dword [rbp - 16], edx       ; new frames
+    mov eax, [rax + 32]
+    mov [rbp - 12], eax
 
-    mov eax, edx
-    cdqe
-    sal rax, 4
-    mov rsi, rax
+    add eax, eax
+    mov [rbp - 16], eax
+
     mov rax, [rbp - 8]
     mov rax, [rax]
     mov rdi, [rax + 24]
+    mov eax, [rbp - 16]
+    imul eax, 16
+    cdqe
+    mov rsi, rax
     call realloc
-    mov rcx, [rbp - 8]
-    mov rcx, [rcx]
-    mov [rcx + 24], rax
+    mov rdx, [rbp - 8]
+    mov rdx, [rdx]
+    mov [rdx + 24], rax
 
-    cmp qword [rcx + 24], 0
-    je .printErrorAllocation
-
-    mov dword [rbp - 20], 0         ; index i
+    mov dword [rbp - 20], 0
 
     jmp .L1
 
 .L2:
-    mov eax, [rbp - 20]
-    cdqe
-    sal rax, 4
-    mov rdx, rax
     mov rax, [rbp - 8]
     mov rax, [rax]
-    mov rax, [rax + 24]
+    mov rdx, [rax + 24]
+    mov eax, [rbp - 20]
+    imul eax, 16
+    cdqe
     add rax, rdx
 
     movsd xmm0, [rax]
+    movsd xmm1, [rax + 8]
     movsd [rbp - 28], xmm0
+    movsd [rbp - 36], xmm1
 
-    movss xmm0, [rax + 8]
-    movss [rbp - 32], xmm0
-
-    movss xmm0, [rax + 12]
-    movss [rbp - 36], xmm0
-
-    mov eax, [rbp - 12]
-    add eax, [rbp - 20]
-    cdqe
-    sal rax, 4
-    mov rdx, rax
     mov rax, [rbp - 8]
     mov rax, [rax]
-    mov rax, [rax + 24]
+    mov rdx, [rax + 24]
+    mov eax, [rbp - 12]
+    add eax, [rbp - 20]
+    imul eax, 16
+    cdqe
     add rax, rdx
 
     movsd xmm0, [rbp - 28]
     movsd [rax], xmm0
 
-    movss xmm0, [rbp - 32]
-    mov edx, -0.0f
+    movss xmm0, [rbp - 36]
+    mov edx, -0.0
     movd xmm1, edx
     xorps xmm0, xmm1
     movss [rax + 8], xmm0
 
-    movss xmm0, [rbp - 36]
+    movss xmm0, [rbp - 32]
     movss [rax + 12], xmm0
 
-    add dword [rbp - 20], 1
+    add dword [rbp - 20], 1 
 
 .L1:
     mov eax, [rbp - 20]
     cmp eax, [rbp - 12]
     jl .L2
- 
-.return:
-    mov edx, [rbp - 16]
+
     mov rax, [rbp - 8]
     mov rax, [rax]
+    mov edx, [rbp - 16]
     mov [rax + 32], edx
 
     add rsp, 48
-
     pop rbp
     ret
-
-.printErrorAllocation:
-    lea edi, [stringFormat]
-    lea esi, [failedAllocationMemory]
-    call printf
-
-    jmp .return
-
-.printSpriteSheetEmpty:
-    lea edi, [stringFormat]
-    lea esi, [spriteSheetEmpty]
-    call printf
-
-    jmp .return
 

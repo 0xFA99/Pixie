@@ -7,6 +7,7 @@ include 'string.inc'
 section '.text' executable
 
 public _start
+public _DEBUG
 
 include 'init.asm'
 include 'sprite.asm'
@@ -52,6 +53,7 @@ _start:
     lea rdi, [player]
     call _AddFlipSpriteSheet
 
+
     lea rdi, [player]
     mov esi, STATE_IDLE
     mov edx, DIRECTION_RIGHT
@@ -62,8 +64,53 @@ _start:
 
     lea rdi, [player]
     mov esi, STATE_IDLE
-    mov edx, DIRECTION_RIGHT
+    mov edx, DIRECTION_LEFT
+    mov ecx, 102
+    mov r8d, 107
+    mov r9d, 10
+    call _AddAnimationState
+
+; _DEBUG:
+;     lea rax, [player]
+;     mov eax, [rax + 48]
+; 
+;     lea rax, [player]
+;     mov rax, [rax]
+;     mov rax, [rax + 24]
+; 
+;     mov rdi, 102
+;     imul rdi, 16
+;     add rax, rdi
+; 
+;     movss xmm0, [rax]
+;     movss xmm0, [rax + 4]
+;     movss xmm0, [rax + 8]
+;     movss xmm0, [rax + 12]
+
+_DEBUG:
+    lea rax, [player]
+    mov eax, [rax + 48]
+
+    lea rdi, [player]
+    mov esi, STATE_IDLE
+    mov edx, DIRECTION_LEFT
     call _SetPlayerAnimation
+
+    lea rax, [player]
+    mov eax, [rax + 48]
+
+    lea rax, [player]
+    mov rax, [rax]
+    mov rdx, [rax + 24]
+    mov eax, [rax + 28]
+    add eax, 102
+    imul eax, 16
+    cdqe
+    add rax, rdx
+    movss xmm0, [rax]
+    movss xmm0, [rax + 4]
+    movss xmm0, [rax + 8]
+    movss xmm0, [rax + 12]
 
     mov edi, 60
     call SetTargetFPS
@@ -114,8 +161,9 @@ _gameEnd:
 section '.data' writeable
 
 gameWindow      GameWindow
-camera          Camera
 player          Player
+camera          Camera
+cameraZoom      dd 0.05
 frameTime       dd ?
 warriorSheet    db "warrior.png", 0x00
 

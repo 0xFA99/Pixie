@@ -25,13 +25,14 @@ _RenderPlayer:
 
     mov rax, [rbp - 8]
     mov eax, [rax + 48]
+    imul eax, 16
     cdqe
     add rax, rdx
 
-    mov rdx, [rax]
-    mov rcx, [rax + 8]
-    mov [rbp - 44], rdx
-    mov [rbp - 36], rcx
+    movsd xmm0, [rax]
+    movsd xmm1, [rax + 8]
+    movsd [rbp - 44], xmm0
+    movsd [rbp - 36], xmm1
 
     ; Position 16 bytes
     mov rax, [rbp - 8]

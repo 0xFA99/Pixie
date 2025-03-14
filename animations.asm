@@ -96,7 +96,6 @@ public _SetPlayerAnimation
 _SetPlayerAnimation:
     push rbp
     mov rbp, rsp
-
     sub rsp, 48
 
     mov [rbp - 8], rdi
@@ -112,7 +111,7 @@ _SetPlayerAnimation:
     mov rax, [rbp - 8]
     mov rax, [rax]
     mov rdx, [rax + 40]
-    mov eax, [rbp - 4]
+    mov eax, [rbp - 20]
     imul eax, 20
     cdqe
     add rdx, rax
@@ -151,6 +150,7 @@ _SetPlayerAnimation:
     mov rax, [rax]
     mov rdx, [rax + 40]
     mov eax, [rbp - 20]
+    imul eax, 20
     cdqe
     add rdx, rax
     mov ecx, [rdx]
