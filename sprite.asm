@@ -45,7 +45,7 @@ _LoadSpriteSheet:
     mov eax, [rbp + 24]
     mov ecx, [rbp - 12]
     idiv ecx
-    mov [rbp - 24], ecx
+    mov [rbp - 24], eax
 
     mov eax, [rbp + 48]
     cdqe

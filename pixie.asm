@@ -70,7 +70,15 @@ _gameLoop:
     test al, al
     jnz _gameEnd
 
-    call _render
+    call BeginDrawing
+
+    mov edi, 0xFF181818
+    call ClearBackground
+
+    lea rdi, [player]
+    call _RenderPlayer
+
+    call EndDrawing
 
     jmp _gameLoop
 

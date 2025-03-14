@@ -6,3 +6,4 @@ failedAllocationMemory db "[ERROR] Failed Allocation Memory", 0x00
 
 spriteSheetEmpty db "[WARNING] Spritesheet is empty", 0x00
 
+hallo db "[INFO] Hallo", 0x00

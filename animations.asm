@@ -6,12 +6,11 @@
 ; [rbp - 28],   r9d = FPS
 
 ; [rbp - 36],   struct AnimationState*
-public _AddAnimationState.addAnimation
 _AddAnimationState:
     push rbp
     mov rbp, rsp
 
-    sub rsp, 40
+    sub rsp, 48
 
     mov [rbp - 8], rdi
     mov [rbp - 12], esi
@@ -23,78 +22,63 @@ _AddAnimationState:
     mov rax, [rbp - 8]
     mov rax, [rax]
     mov eax, [rax + 48]
-    cmp eax, 0
+    test eax, eax
     jg .reAllocation
 
-    ; Allocation memory for animationStates
-    ; 20 bytes (struct AnimationState)
     mov edi, 20
     call malloc
     mov rdx, [rbp - 8]
     mov rdx, [rdx]
     mov [rdx + 40], rax
 
-    ; Reset AnimationStateCount
     mov dword [rdx + 48], 0
 
-    jmp .addAnimation
+    jmp .fillAnimationData
 
 .reAllocation:
     mov rax, [rbp - 8]
     mov rax, [rax]
-    lea rdx, [rax + 40]
+    mov rdi, [rax + 40]
     mov eax, [rax + 48]
     add eax, 1
     imul eax, 20
     cdqe
     mov rsi, rax
-    mov rdi, rdx
     call realloc
     mov rdx, [rbp - 8]
     mov rdx, [rdx]
     mov [rdx + 40], rax
 
-.addAnimation:
+.fillAnimationData:
     mov rax, [rbp - 8]
     mov rax, [rax]
-    mov rdx, [rax + 40]
+    mov rcx, [rax + 40]
     mov eax, [rax + 48]
-    imul eax, 20
     cdqe
-    add rdx, rax
-    mov [rbp - 36], rdx
+    imul eax, 20
+    add rax, rcx
+    mov [rbp - 36], rax
 
-    ; Fill new Animation
     mov rax, [rbp - 36]
-
-    ; startFrame
     mov edx, [rbp - 20]
-    mov ecx, [rbp - 24]
     mov [rax], edx
-    mov [rax + 4], ecx
-
-    ; endFrame
+    mov edx, [rbp - 24]
+    mov [rax + 4], edx
     pxor xmm0, xmm0
-    mov edx, [rbp - 28]
-    cvtsi2ss xmm0, edx
+    cvtsi2ss xmm0, [rbp - 28]
     movss [rax + 8], xmm0
-
-    ; state
     mov edx, [rbp - 12]
     mov [rax + 12], edx
-
-    ; direction
     mov edx, [rbp - 16]
     mov [rax + 16], edx
 
-    ; stateCount++
     mov rax, [rbp - 8]
     mov rax, [rax]
-    mov dword [rax + 48], 1
+    mov edx, [rax + 48]
+    add edx, 1
+    mov [rax + 48], edx
 
-.return:
-    add rsp, 40
-
+    add rsp, 48
     pop rbp
     ret
 
@@ -106,13 +90,14 @@ _AddAnimationState:
 ; [rbp - 12], state
 ; [rbp - 16], direction
 ; [rbp - 20], index
+
 ; [rbp - 40], struct AnimationStates
 public _SetPlayerAnimation
 _SetPlayerAnimation:
     push rbp
     mov rbp, rsp
 
-    sub rsp, 40
+    sub rsp, 48
 
     mov [rbp - 8], rdi
     mov [rbp - 12], esi
@@ -193,7 +178,7 @@ _SetPlayerAnimation:
     cmp [rbp - 20], eax
     jl .L3
 
-    add rsp, 40
+    add rsp, 48
     pop rbp
     ret
 

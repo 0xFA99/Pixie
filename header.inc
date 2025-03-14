@@ -12,6 +12,7 @@ extrn EndDrawing
 extrn ClearBackground
 extrn LoadTexture
 extrn DrawTexture
+extrn DrawTexturePro
 
 ; ======================
 ;        STDLIB 
