@@ -11,6 +11,7 @@ public _start
 include 'init.asm'
 include 'sprite.asm'
 include 'animations.asm'
+include 'update.asm'
 include 'render.asm'
 
 _start:
@@ -72,6 +73,13 @@ _gameLoop:
     test al, al
     jnz _gameEnd
 
+    call GetFrameTime
+    movss [frameTime], xmm0
+
+    lea rdi, [camera]
+    lea rsi, [player]
+    call _UpdateCamera
+
     call BeginDrawing
 
     mov edi, 0xFF181818
@@ -108,7 +116,9 @@ section '.data' writeable
 gameWindow      GameWindow
 camera          Camera
 player          Player
+frameTime       dd ?
 warriorSheet    db "warrior.png", 0x00
+
 
 section '.note.GNU-stack'
 

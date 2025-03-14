@@ -7,6 +7,7 @@ extrn CloseWindow
 extrn WindowShouldClose
 extrn GetScreenWidth
 extrn GetScreenHeight
+extrn GetFrameTime
 extrn BeginDrawing
 extrn EndDrawing
 extrn BeginMode2D
@@ -14,6 +15,7 @@ extrn EndMode2D
 extrn ClearBackground
 extrn LoadTexture
 extrn DrawTexturePro
+extrn IsKeyDown
 
 ; ======================
 ;        STDLIB 
