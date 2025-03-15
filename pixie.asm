@@ -7,7 +7,7 @@ include 'string.inc'
 section '.text' executable
 
 public _start
-public _DEBUG
+public _gameLoop
 
 include 'init.asm'
 include 'sprite.asm'
@@ -53,7 +53,6 @@ _start:
     lea rdi, [player]
     call _AddFlipSpriteSheet
 
-
     lea rdi, [player]
     mov esi, STATE_IDLE
     mov edx, DIRECTION_RIGHT
@@ -70,30 +69,12 @@ _start:
     mov r9d, 10
     call _AddAnimationState
 
-; _DEBUG:
-;     lea rax, [player]
-;     mov eax, [rax + 48]
-; 
-;     lea rax, [player]
-;     mov rax, [rax]
-;     mov rax, [rax + 24]
-; 
-;     mov rdi, 102
-;     imul rdi, 16
-;     add rax, rdi
-; 
-;     movss xmm0, [rax]
-;     movss xmm0, [rax + 4]
-;     movss xmm0, [rax + 8]
-;     movss xmm0, [rax + 12]
-
-_DEBUG:
     lea rax, [player]
     mov eax, [rax + 48]
 
     lea rdi, [player]
     mov esi, STATE_IDLE
-    mov edx, DIRECTION_LEFT
+    mov edx, DIRECTION_RIGHT
     call _SetPlayerAnimation
 
     lea rax, [player]
@@ -122,6 +103,10 @@ _gameLoop:
 
     call GetFrameTime
     movss [frameTime], xmm0
+
+    lea rdi, [player]
+    movss xmm0, [frameTime]
+    call _UpdatePlayer
 
     lea rdi, [camera]
     lea rsi, [player]

@@ -1,5 +1,6 @@
 ; rdi = Player*
 ; [rbp - 8], Player*
+public _InitPlayer
 _InitPlayer:
     push rbp
     mov rbp, rsp
@@ -17,16 +18,19 @@ _InitPlayer:
     mov [rdx], rax
 
     pxor xmm0, xmm0
-    movsd [rax + 16], xmm0  ; movement.position
-    movsd [rax + 24], xmm0  ; movement.velocity
+    movsd [rdx + 16], xmm0  ; movement.position
+    movsd [rdx + 24], xmm0  ; movement.velocity
 
-    mov edx, -200.0f
-    movd xmm0, edx
-    movss [rax + 32], xmm0  ; movement.acceleration
+    mov eax, -200.0
+    movd xmm0, eax
+    movss [rdx + 32], xmm0  ; movement.acceleration
 
-    mov edx, 100.0f
-    movd xmm0, edx
-    movss [rax + 36], xmm0  ; movement.speed
+    mov eax, 100.0
+    movd xmm0, eax
+    movss [rdx + 36], xmm0  ; movement.speed
+
+    mov rax, [rdx]
+    movss [rax + 52], xmm0
 
 .return:
     add rsp, 8
