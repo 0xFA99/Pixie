@@ -30,6 +30,7 @@ _InitPlayer:
     movss [rdx + 36], xmm0  ; movement.speed
 
     mov rax, [rdx]
+    pxor xmm0, xmm0
     movss [rax + 52], xmm0
 
 .return:

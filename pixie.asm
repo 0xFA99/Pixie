@@ -7,7 +7,7 @@ include 'string.inc'
 section '.text' executable
 
 public _start
-public _gameLoop
+public _start.gameLoop
 
 include 'init.asm'
 include 'sprite.asm'
@@ -29,12 +29,10 @@ _start:
     call _InitCamera
 
     sub rsp, 48
-
     lea rdi, [warriorSheet]
     mov esi, 17                 ; rows
     mov edx, 6                  ; column
     call _LoadSpriteSheet
-
     lea rax, [player]
     mov rax, [rax]
     mov rdx, [rsp]
@@ -47,7 +45,6 @@ _start:
     mov rcx, [rsp + 32]
     mov [rax + 24], rdx
     mov [rax + 32], rcx
-
     add rsp, 48
 
     lea rdi, [player]
@@ -69,43 +66,21 @@ _start:
     mov r9d, 10
     call _AddAnimationState
 
-    lea rax, [player]
-    mov eax, [rax + 48]
-
     lea rdi, [player]
     mov esi, STATE_IDLE
     mov edx, DIRECTION_RIGHT
     call _SetPlayerAnimation
 
-    lea rax, [player]
-    mov eax, [rax + 48]
-
-    lea rax, [player]
-    mov rax, [rax]
-    mov rdx, [rax + 24]
-    mov eax, [rax + 28]
-    add eax, 102
-    imul eax, 16
-    cdqe
-    add rax, rdx
-    movss xmm0, [rax]
-    movss xmm0, [rax + 4]
-    movss xmm0, [rax + 8]
-    movss xmm0, [rax + 12]
-
     mov edi, 60
     call SetTargetFPS
 
-_gameLoop:
+.gameLoop:
     call WindowShouldClose
     test al, al
-    jnz _gameEnd
-
-    call GetFrameTime
-    movss [frameTime], xmm0
+    jnz .gameEnd
 
     lea rdi, [player]
-    movss xmm0, [frameTime]
+    call GetFrameTime
     call _UpdatePlayer
 
     lea rdi, [camera]
@@ -133,10 +108,9 @@ _gameLoop:
 
     call EndMode2D
     call EndDrawing
+    jmp .gameLoop
 
-    jmp _gameLoop
-
-_gameEnd:
+.gameEnd:
     call CloseWindow
 
     mov eax, 60
@@ -149,7 +123,6 @@ gameWindow      GameWindow
 player          Player
 camera          Camera
 cameraZoom      dd 0.05
-frameTime       dd ?
 warriorSheet    db "warrior.png", 0x00
 
 

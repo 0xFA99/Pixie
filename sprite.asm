@@ -37,12 +37,14 @@ _LoadSpriteSheet:
 
     ; width = texture.width / columns
     mov eax, [rbp + 20]
+    cdq
     mov ecx, [rbp - 16]
     idiv ecx
     mov [rbp - 20], eax
 
     ; height = texture.height / rows
     mov eax, [rbp + 24]
+    cdq
     mov ecx, [rbp - 12]
     idiv ecx
     mov [rbp - 24], eax

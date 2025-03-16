@@ -21,116 +21,120 @@ _UpdateCamera:
     pop rbp
     ret
 
-; rdi = Player*
-; xmm0 = float frameTime
-public _UpdatePlayer.updatePlayerAnimation
 _UpdatePlayer:
     push rbp
     mov rbp, rsp
     sub rsp, 32
 
     mov [rbp - 8], rdi
-    movss [rbp - 12], xmm0
+    movd [rbp - 16], xmm0
 
+;   struct PlayerStatus status = player->status;
     mov rax, [rbp - 8]
-    mov rax, [rax + 40]
-    mov [rbp - 20], rax
+    mov rdx, [rax + 40]
+    mov [rbp - 24], rdx
 
+;   struct AnimationState *animation = player->animation;
     mov rax, [rbp - 8]
-    mov rax, [rax + 8]
-    mov [rbp - 28], rax
+    mov rdx, [rax + 8]
+    mov [rbp - 32], rdx
 
-    mov edx, [rbp - 20]
-    mov rax, [rbp - 8]
+;   if (status.state != animation->state || status.direction != animation->direction)
+;       SetPlayerAnimation(player, status.state, status.direction);
+    mov edx, [rbp - 24]
+    mov rax, [rbp - 32]
     mov eax, [rax + 12]
-    cmp edx, eax
+    cmp edx, eax                ; status.state != animation->state
     jne .setPlayerAnimation
 
-    mov eax, [rbp - 16]
-    mov rax, [rbp - 8]
-    mov eax, [rax + 12]
+    mov edx, [rbp - 20]
+    mov rax, [rbp - 32]
+    mov eax, [rax + 16]
     cmp edx, eax
     je .updatePlayerAnimation
 
 .setPlayerAnimation:
     mov rdi, [rbp - 8]
-    mov esi, [rbp - 20]
-    mov edx, [rbp - 16]
+    mov esi, [rbp - 24]
+    mov edx, [rbp - 20]
     call _SetPlayerAnimation
 
 .updatePlayerAnimation:
-    ; Update Player Movement
-    mov rax, [rbp - 8]
+    mov rax, [rbp - 8]          ; player*
 
-    movss xmm0, [rax + 16]
-    movss xmm1, [rax + 24]
-    mulss xmm1, [rbp - 12]
-    addss xmm0, xmm1
+;   player->movement.position.x + player->movement.velocity.x * frameTime
+    movss xmm1, [rax + 16]      ; player->movement.position.x
+    movss xmm0, [rax + 24]      ; player->movement.velocity.x
+    mulss xmm0, [rbp - 16]      ; frameTime
+    addss xmm1, xmm0
 
-    movss xmm1, [rax + 20]
-    movss xmm2, [rax + 28]
-    mulss xmm2, [rbp - 12]
-    addss xmm1, xmm2
+;   player->movement.position.y + player->movement.velocity.y * frameTime
+    movss xmm2, [rax + 20]      ; player.movement.position.y 
+    movss xmm0, [rax + 28]      ; player.movement.velocity.y
+    mulss xmm0, [rbp - 16]      ; frameTime
+    addss xmm0, xmm2
 
-    movss [rax + 16], xmm0
-    movss [rax + 20], xmm1
+    movss [rax + 16], xmm1
+    movss [rax + 20], xmm0
 
-    ; Update Player Animation
-    ; mov rax, [rbp - 8]
-    ; movss xmm0, [rax + 52]
-    ; movss [rbp - 16], xmm0  ; frameDuration
-    mov rax, [rbp - 8]
+;   float *frameDuration = &player->entity->frameDuration;
     mov rax, [rax]
     add rax, 52
-    mov [rbp - 16], rax
+    mov [rbp - 24], rax
 
+    lea rdi, [numberFormat1]
+    mov rax, [rbp - 24]
+    cvtss2sd xmm0, [rax]
+    call printf
+
+;   float playerAnimFPS = player->animation->animationSequence.frameRate;
     mov rax, [rbp - 8]
     mov rax, [rax + 8]
     movss xmm0, [rax + 8]
-    movss [rbp - 20], xmm0  ; player animation FPS
+    movss [rbp - 28], xmm0
 
-    ; movss xmm0, [rbp - 16]
-    ; movss xmm1, [rbp - 12]
-    ; addss xmm0, xmm1
-    ; movss [rbp - 16], xmm0
-
-    mov rax, [rbp - 16]
+;   *frameDuration += frameTime;
+    mov rax, [rbp - 24]
     movss xmm0, [rax]
-    addss xmm0, [rbp - 12]
+    addss xmm0, [rbp - 16]
+    movss [rax], xmm0
 
-    mov eax, 1.0
+    ; 1.0f 0x3F800000
+    mov eax, 0x3F800000
     movd xmm0, eax
-    movd [rbp - 24], xmm0   ; 1.0
+    movss [rbp - 32], xmm0
 
-    ; movss xmm0, [rbp - 16]
-    ; movss xmm1, [rbp - 24]
-    ; divss xmm1, [rbp - 20]
-    ; comiss xmm0, xmm1
-    mov rax, [rbp - 16]
+;   if (*frameDuration >= 1.0f / playerAnimFPS) {
+    mov rax, [rbp - 24]
     movss xmm0, [rax]
-    movss xmm1, [rbp - 24]
-    divss xmm1, [rbp - 20]
+
+    movss xmm1, [rbp - 32]
+    divss xmm1, [rbp - 28]
     comiss xmm0, xmm1
     jnb .loopAnimation
 
     jmp .return
 
 .loopAnimation:
+;   *frameDuration = 0.0f;
     pxor xmm0, xmm0
-    movss [rbp - 16], xmm0
+    mov rax, [rbp - 24]
+    movss [rax], xmm0
 
+;   player->currentFrame++;
     mov rax, [rbp - 8]
     mov edx, [rax + 48]
     add edx, 1
     mov [rax + 48], edx
 
-    mov rax, [rbp - 8]
+;   if (player->currentFrame > player->animation->animationSequence.endFrame) {
     mov edx, [rax + 48]
     mov rax, [rax + 8]
     mov eax, [rax + 4]
     cmp edx, eax
     jle .return
-    
+
+;   player->currentFrame = player->animation->animationSequence.startFrame;
     mov rax, [rbp - 8]
     mov rax, [rax + 8]
     mov edx, [rax]

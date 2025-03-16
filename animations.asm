@@ -138,12 +138,12 @@ _SetPlayerAnimation:
     mov rax, [rax]
     mov rdx, [rax + 40]
     mov eax, [rbp - 20]
+    imul eax, 20
     cdqe
     add rdx, rax
 
     mov rax, [rbp - 8]
-    lea rax, [rax + 8]
-    mov [rax], rdx
+    mov [rax + 8], rdx
 
 ;   player->currentFrame = player->entity->animationStates[i].animationSequence.startFrameIndex;
     mov rax, [rbp - 8]
@@ -170,7 +170,6 @@ _SetPlayerAnimation:
     add dword [rbp - 20], 1
 
 .L1:
-
 ;   for (int i = 0; i < player->entity->animationStateCount; i++) {
     mov rax, [rbp - 8]
     mov rax, [rax]
