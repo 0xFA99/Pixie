@@ -7,11 +7,11 @@ include 'string.inc'
 section '.text' executable
 
 public _start
-public _start.debug
 
 include 'init.asm'
 include 'sprite.asm'
 include 'animations.asm'
+include 'input.asm'
 include 'update.asm'
 include 'render.asm'
 
@@ -68,29 +68,21 @@ _start:
 
     lea rdi, [player]
     mov esi, STATE_IDLE
-    mov edx, DIRECTION_LEFT
+    mov edx, DIRECTION_RIGHT
     call _SetPlayerAnimation
 
     mov edi, 60
     call SetTargetFPS
 
-.debug:
-    ; lea rax, [player]
-    ; mov rax, [rax]
-    ; mov rdx, [rax + 24]
-    ; mov eax, 102
-    ; imul eax, 16
-    ; cdqe
-    ; add rdx, rax
-    ; movss xmm0, [rdx]
-    ; movss xmm0, [rdx + 4]
-    ; movss xmm0, [rdx + 8]
-    ; movss xmm0, [rdx + 12]
-
 .gameLoop:
     call WindowShouldClose
     test al, al
     jnz .gameEnd
+
+    lea rdi, [player]
+    call GetFrameTime
+    movss xmm1, [gravity]
+    call _InputPlayer
 
     lea rdi, [player]
     call GetFrameTime
@@ -136,6 +128,7 @@ gameWindow      GameWindow
 player          Player
 camera          Camera
 cameraZoom      dd 0.05
+gravity         dd 500.0
 warriorSheet    db "warrior.png", 0x00
 
 section '.note.GNU-stack'

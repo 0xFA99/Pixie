@@ -18,6 +18,12 @@ extrn DrawTexturePro
 extrn IsKeyDown
 
 ; ======================
+;        RayMath 
+; ======================
+extrn Vector2Add
+extrn Vector2Scale
+
+; ======================
 ;        STDLIB 
 ; ======================
 extrn printf
