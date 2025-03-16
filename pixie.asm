@@ -7,7 +7,7 @@ include 'string.inc'
 section '.text' executable
 
 public _start
-public _start.gameLoop
+public _start.debug
 
 include 'init.asm'
 include 'sprite.asm'
@@ -68,11 +68,24 @@ _start:
 
     lea rdi, [player]
     mov esi, STATE_IDLE
-    mov edx, DIRECTION_RIGHT
+    mov edx, DIRECTION_LEFT
     call _SetPlayerAnimation
 
     mov edi, 60
     call SetTargetFPS
+
+.debug:
+    ; lea rax, [player]
+    ; mov rax, [rax]
+    ; mov rdx, [rax + 24]
+    ; mov eax, 102
+    ; imul eax, 16
+    ; cdqe
+    ; add rdx, rax
+    ; movss xmm0, [rdx]
+    ; movss xmm0, [rdx + 4]
+    ; movss xmm0, [rdx + 8]
+    ; movss xmm0, [rdx + 12]
 
 .gameLoop:
     call WindowShouldClose
@@ -124,7 +137,6 @@ player          Player
 camera          Camera
 cameraZoom      dd 0.05
 warriorSheet    db "warrior.png", 0x00
-
 
 section '.note.GNU-stack'
 

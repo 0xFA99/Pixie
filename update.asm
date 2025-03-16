@@ -21,6 +21,7 @@ _UpdateCamera:
     pop rbp
     ret
 
+public _UpdatePlayer
 _UpdatePlayer:
     push rbp
     mov rbp, rsp
@@ -81,11 +82,6 @@ _UpdatePlayer:
     mov rax, [rax]
     add rax, 52
     mov [rbp - 24], rax
-
-    lea rdi, [numberFormat1]
-    mov rax, [rbp - 24]
-    cvtss2sd xmm0, [rax]
-    call printf
 
 ;   float playerAnimFPS = player->animation->animationSequence.frameRate;
     mov rax, [rbp - 8]
