@@ -1,5 +1,4 @@
 ; rdi = Player*
-public _RenderPlayer
 _RenderPlayer:
     push rbp
     mov rbp, rsp
@@ -42,14 +41,28 @@ _RenderPlayer:
     movss xmm0, [rbp - 32]
     movss [rbp - 48], xmm0
 
+    ; Check if position.width is negative
+    ; convert to positive
     movss xmm0, [rbp - 36]
+    mov eax, -0.0
+    movd xmm2, eax
+    pxor xmm1, xmm1
+    comiss xmm1, xmm0
+    jbe .positive
+
+    xorps xmm0, xmm2
+
+.positive:
+    movss [rbp - 52], xmm0
+
+    movss xmm0, [rbp - 52]
     movss [rbp - 52], xmm0
 
     ; Vector 8 bytes
     pxor xmm0, xmm0
     movsd [rbp - 68], xmm0
 
-    sub rsp, 32
+    sub rsp, 16
     mov rcx, rsp
 
     ; texture
@@ -59,7 +72,7 @@ _RenderPlayer:
     mov [rcx + 8], rdx
     mov eax, [rbp - 12]
     mov [rcx + 16], eax
-   
+
     ; frame
     movsd xmm0, [rbp - 44]
     movsd xmm1, [rbp - 36]
@@ -78,7 +91,8 @@ _RenderPlayer:
     mov edi, -1
 
     call DrawTexturePro
-    add rsp, 32
+
+    add rsp, 16
 
     add rsp, 80
     pop rbp

@@ -7,6 +7,7 @@ include 'string.inc'
 section '.text' executable
 
 public _start
+public _start.debug
 
 include 'init.asm'
 include 'sprite.asm'
@@ -33,22 +34,59 @@ _start:
     mov esi, 17                 ; rows
     mov edx, 6                  ; column
     call _LoadSpriteSheet
+    ; lea rax, [player]
+    ; mov rax, [rax]
+
+    ; mov rdx, [rsp]
+    ; mov rcx, [rsp + 8]
+    ; mov [rax], rdx
+    ; mov [rax + 8], rcx
+
+    ; mov rdx, [rsp + 16]
+    ; mov [rax + 16], rdx
+    ; mov rdx, [rsp + 24]
+    ; mov rcx, [rsp + 32]
+    ; mov [rax + 24], rdx
+    ; mov [rax + 32], rcx
+
+    ; Dereference SpriteSheet
     lea rax, [player]
     mov rax, [rax]
+
+    ; Get Return SpriteSheet
+    ; SpriteSheet.texture
     mov rdx, [rsp]
     mov rcx, [rsp + 8]
     mov [rax], rdx
     mov [rax + 8], rcx
     mov rdx, [rsp + 16]
     mov [rax + 16], rdx
-    mov rdx, [rsp + 24]
-    mov rcx, [rsp + 32]
+
+    ; SpriteSheet.frames
+    ; SpriteSheet.frameCount
+    mov rdx, [rsp + 20]
+    mov rcx, [rsp + 28]
     mov [rax + 24], rdx
     mov [rax + 32], rcx
+
     add rsp, 48
 
     lea rdi, [player]
     call _AddFlipSpriteSheet
+
+.debug:
+    lea rax, [player]
+    mov rax, [rax]
+    mov rdx, [rax + 24]
+    lea rax, [player]
+    mov eax, [rax + 48]
+    imul eax, 16
+    cdqe
+    add rax, rdx
+    movss xmm0, [rax]
+    movss xmm0, [rax + 4]
+    movss xmm0, [rax + 8]
+    movss xmm0, [rax + 12]
 
     lea rdi, [player]
     mov esi, STATE_IDLE
@@ -68,7 +106,7 @@ _start:
 
     lea rdi, [player]
     mov esi, STATE_IDLE
-    mov edx, DIRECTION_RIGHT
+    mov edx, DIRECTION_LEFT
     call _SetPlayerAnimation
 
     mov edi, 60

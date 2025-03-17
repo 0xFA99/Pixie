@@ -1,136 +1,140 @@
-; rdi = const char *file
-; esi = int rows
-; edx = int columns
+; ========== PARAMETERS ==========
+; [rbp -  8]    = file
+; [rbp - 12]    = rows
+; [rbp - 16]    = columns
 
-; [rbp + 16] = struct SpriteSheet - texture
-; [rbp + 40] = struct SpriteSheet - *frames
-; [rbp + 48] = struct SpriteSheet - frameCount
+; ========= SPRITESHEET ==========
+; [rbp - 20]    = Texture.format
+; [rbp - 24]    = Texture.mipmaps
+; [rbp - 28]    = Texture.height
+; [rbp - 32]    = Texture.width
+; [rbp - 36]    = Texture.id
+; [rbp - 44]    = Frames*
+; [rbp - 48]    = FrameCount
 
-; [rbp - 8]  = const char *file
-; [rbp - 12] = int rows
-; [rbp - 16] = int columns
-; [rbp - 20] = width
-; [rbp - 24] = height
-; [rbp - 28] = counter
-; [rbp - 32] = index row
-; [rbp - 36] = index column
+; ========== VARIABLES ===========
+; [rbp - 52]    = width
+; [rbp - 56]    = height
+; [rbp - 60]    = counter
+; [rbp - 64]    = index row
+; [rbp - 68]    = index column
 _LoadSpriteSheet:
     push rbp
     mov rbp, rsp
-    sub rsp, 48
+    sub rsp, 80
 
-    mov qword [rbp - 8], rdi
-    mov dword [rbp - 12], esi
-    mov dword [rbp - 16], edx
+    mov [rbp - 8], rdi
+    mov [rbp - 12], esi
+    mov [rbp - 16], edx
 
-    mov rsi, rdi
-    lea rdi, [rbp + 16]
+    lea rdi, [rbp - 36]
+    mov rsi, [rbp - 8]
     call LoadTexture
 
-    cmp dword [rbp + 16], 0
-    je .printErrorLoadTexture
-
-    ; frameCount = rows * columns
+    ; FrameCount = rows * columns
     mov eax, [rbp - 12]
     imul eax, [rbp - 16]
-    mov dword [rbp + 48], eax
+    mov [rbp - 48], eax
 
-    ; width = texture.width / columns
-    mov eax, [rbp + 20]
-    cdq
+    ; Texture.width / columns
+    mov eax, [rbp - 32]
     mov ecx, [rbp - 16]
+    xor edx, edx
     idiv ecx
-    mov [rbp - 20], eax
+    mov [rbp - 52], eax
 
-    ; height = texture.height / rows
-    mov eax, [rbp + 24]
-    cdq
+    ; Texture.height / rows
+    mov eax, [rbp - 28]
     mov ecx, [rbp - 12]
+    xor edx, edx
     idiv ecx
-    mov [rbp - 24], eax
+    mov [rbp - 56], eax
 
-    mov eax, [rbp + 48]
-    cdqe
-    sal rax, 4
+    ; malloc(sizeof(Rectangle) * FrameCount)
+    ; Store into frames*
+    mov eax, [rbp - 48]
+    imul eax, 16
     mov rdi, rax
     call malloc
-    mov [rbp + 40], rax    
+    mov [rbp - 44], rax
 
-    cmp qword [rbp + 40], 0
-    je .printErrorAllocation
-
-    mov dword [rbp - 28], 0
-    mov dword [rbp - 32], 0
-
-    jmp .L1
+    mov dword [rbp - 64], 0
 
 .L4:
-    mov dword [rbp - 36], 0
+    mov dword [rbp - 68], 0
     jmp .L2
 
 .L3:
-    mov eax, [rbp - 28]
-    cdqe
-    sal rax, 4
-    mov rdx, rax
+    ; Frame.x = column * width
+    mov edx, [rbp - 68]
+    imul edx, [rbp - 52]
+    cvtsi2ss xmm0, edx
 
-    mov rax, [rbp + 40]
+    ; Frame.y = row * height
+    mov edx, [rbp - 64]
+    imul edx, [rbp - 56]
+    cvtsi2ss xmm1, edx
+
+    ; Frame.width = width
+    mov edx, [rbp - 52]
+    cvtsi2ss xmm2, edx
+
+    ; Frame.height = height
+    mov edx, [rbp - 56]
+    cvtsi2ss xmm3, edx
+
+    mov rdx, [rbp - 44]
+    mov eax, [rbp - 60]
+    imul eax, 16
+    cdqe
     add rax, rdx
 
-    mov edx, [rbp - 36]
-    imul edx, [rbp - 20]
-    cvtsi2ss xmm0, edx
     movss [rax], xmm0
-
-    mov edx, [rbp - 32]
-    imul edx, [rbp - 24]
-    cvtsi2ss xmm0, edx
-    movss [rax + 4], xmm0
-
-    mov edx, [rbp - 20]
-    cvtsi2ss xmm0, edx
-    movss [rax + 8], xmm0
-
-    mov edx, [rbp - 24]
-    cvtsi2ss xmm0, edx
-    movss [rax + 12], xmm0
-
-    add dword [rbp - 28], 1
-    add dword [rbp - 36], 1
-
+    movss [rax + 4], xmm1
+    movss [rax + 8], xmm2
+    movss [rax + 12], xmm3
+    
+    add dword [rbp - 60], 1
+    add dword [rbp - 68], 1
+    
 .L2:
-    mov eax, [rbp - 36]
+    mov eax, [rbp - 68]
     cmp eax, [rbp - 16]
     jl .L3
 
-    add dword [rbp - 32], 1
+    add dword [rbp - 64], 1
 
 .L1:
-    mov eax, [rbp - 32]
+    mov eax, [rbp - 64]
     cmp eax, [rbp - 12]
     jl .L4
 
-.return:
-    add rsp, 48
+    ; Return SpriteSheet
+    ; Texture
+    mov rax, [rbp - 36]
+    mov rdx, [rbp - 28]
+    mov rcx, [rbp - 20]
+    mov [rbp + 16], rax
+    mov [rbp + 24], rdx
+    mov [rbp + 32], rcx
 
+    ; Frames*
+    mov rax, [rbp - 44]
+    mov [rbp + 36], rax
+
+    ; FrameCount
+    mov rax, [rbp - 48]
+    mov [rbp + 44], rax
+
+    add rsp, 80
     pop rbp
     ret
 
-.printErrorLoadTexture:
-    lea edi, [stringFormat]
-    lea esi, [failedLoadTexture]
-    call printf
-
-    jmp .return
-
-.printErrorAllocation:
-    lea edi, [stringFormat]
-    lea esi, [failedAllocationMemory]
-    call printf
-
-    jmp .return
-
-; rdi = Player*
+; [rbp - 8]     = Player*
+; [rbp - 12]    = Original FrameCount
+; [rbp - 16]    = New FrameCount
+; [rbp - 20]    = Index
+; [rbp - 36]    = Temporary Rectangle
 _AddFlipSpriteSheet:
     push rbp
     mov rbp, rsp
@@ -163,6 +167,8 @@ _AddFlipSpriteSheet:
     jmp .L1
 
 .L2:
+    ; Temporary Rectangle
+    ; Rectangle = spritesheet->frames[i]
     mov rax, [rbp - 8]
     mov rax, [rax]
     mov rdx, [rax + 24]
@@ -170,12 +176,13 @@ _AddFlipSpriteSheet:
     imul eax, 16
     cdqe
     add rax, rdx
-
     movsd xmm0, [rax]
     movsd xmm1, [rax + 8]
-    movsd [rbp - 28], xmm0
-    movsd [rbp - 36], xmm1
+    movsd [rbp - 36], xmm0
+    movsd [rbp - 28], xmm1
 
+    ; Copy position(x, y) of temporary rectangle
+    ; to new frame
     mov rax, [rbp - 8]
     mov rax, [rax]
     mov rdx, [rax + 24]
@@ -183,27 +190,31 @@ _AddFlipSpriteSheet:
     add eax, [rbp - 20]
     imul eax, 16
     cdqe
-    add rax, rdx
+    add rdx, rax
 
-    movsd xmm0, [rbp - 28]
-    movsd [rax], xmm0
+    ; Copy Rectangle.x
+    movsd xmm0, [rbp - 36]
+    movsd [rdx], xmm0
 
-    movss xmm0, [rbp - 36]
-    mov edx, -0.0
-    movd xmm1, edx
+    ; Copy Rectangle.width [Negative]
+    movss xmm0, [rbp - 28]
+    mov eax, -0.0
+    movd xmm1, eax
     xorps xmm0, xmm1
-    movss [rax + 8], xmm0
+    movss [rdx + 8], xmm0
 
-    movss xmm0, [rbp - 32]
-    movss [rax + 12], xmm0
+    ; Copy Rectangle.height
+    movss xmm0, [rbp - 24]
+    movss [rdx + 12], xmm0
 
-    add dword [rbp - 20], 1 
+    add dword [rbp - 20], 1
 
 .L1:
     mov eax, [rbp - 20]
     cmp eax, [rbp - 12]
     jl .L2
 
+    ; Change original to new frameCount
     mov rax, [rbp - 8]
     mov rax, [rax]
     mov edx, [rbp - 16]
@@ -213,3 +224,85 @@ _AddFlipSpriteSheet:
     pop rbp
     ret
 
+; _AddFlipSpriteSheet:
+;     push rbp
+;     mov rbp, rsp
+;     sub rsp, 48
+; 
+;     mov [rbp - 8], rdi
+; 
+;     mov rax, [rbp - 8]
+;     mov rax, [rax]
+;     mov eax, [rax + 32]
+;     mov [rbp - 12], eax
+; 
+;     add eax, eax
+;     mov [rbp - 16], eax
+; 
+;     mov rax, [rbp - 8]
+;     mov rax, [rax]
+;     mov rdi, [rax + 24]
+;     mov eax, [rbp - 16]
+;     imul eax, 16
+;     cdqe
+;     mov rsi, rax
+;     call realloc
+;     mov rdx, [rbp - 8]
+;     mov rdx, [rdx]
+;     mov [rdx + 24], rax
+; 
+;     mov dword [rbp - 20], 0
+; 
+;     jmp .L1
+; 
+; .L2:
+;     mov rax, [rbp - 8]
+;     mov rax, [rax]
+;     mov rdx, [rax + 24]
+;     mov eax, [rbp - 20]
+;     imul eax, 16
+;     cdqe
+;     add rax, rdx
+; 
+;     movsd xmm0, [rax]
+;     movsd xmm1, [rax + 8]
+;     movsd [rbp - 28], xmm0
+;     movsd [rbp - 36], xmm1
+; 
+;     mov rax, [rbp - 8]
+;     mov rax, [rax]
+;     mov rdx, [rax + 24]
+;     mov eax, [rbp - 12]
+;     add eax, [rbp - 20]
+;     imul eax, 16
+;     cdqe
+;     add rax, rdx
+; 
+;     movsd xmm0, [rbp - 28]
+;     movsd [rax], xmm0
+; 
+;     movss xmm0, [rbp - 36]
+;     mov edx, -0.0
+;     movd xmm1, edx
+;     xorps xmm0, xmm1
+;     movss [rax + 8], xmm0
+; 
+;     movss xmm0, [rbp - 32]
+;     movss [rax + 12], xmm0
+; 
+;     add dword [rbp - 20], 1 
+; 
+; .L1:
+;     mov eax, [rbp - 20]
+;     cmp eax, [rbp - 12]
+;     jl .L2
+; 
+;     mov rax, [rbp - 8]
+;     mov rax, [rax]
+;     mov edx, [rbp - 16]
+;     mov [rax + 32], edx
+; 
+;     add rsp, 48
+;     pop rbp
+;     ret
+; 

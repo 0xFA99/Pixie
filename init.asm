@@ -1,6 +1,5 @@
 ; rdi = Player*
 ; [rbp - 8], Player*
-public _InitPlayer
 _InitPlayer:
     push rbp
     mov rbp, rsp
@@ -48,7 +47,6 @@ _InitPlayer:
 
 ; rdi = Camera*
 ; rsi = Player*
-public _InitCamera
 _InitCamera:
     push rbp
     mov rbp, rsp
