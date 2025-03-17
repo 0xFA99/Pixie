@@ -34,20 +34,6 @@ _start:
     mov esi, 17                 ; rows
     mov edx, 6                  ; column
     call _LoadSpriteSheet
-    ; lea rax, [player]
-    ; mov rax, [rax]
-
-    ; mov rdx, [rsp]
-    ; mov rcx, [rsp + 8]
-    ; mov [rax], rdx
-    ; mov [rax + 8], rcx
-
-    ; mov rdx, [rsp + 16]
-    ; mov [rax + 16], rdx
-    ; mov rdx, [rsp + 24]
-    ; mov rcx, [rsp + 32]
-    ; mov [rax + 24], rdx
-    ; mov [rax + 32], rcx
 
     ; Dereference SpriteSheet
     lea rax, [player]
@@ -88,6 +74,7 @@ _start:
     movss xmm0, [rax + 8]
     movss xmm0, [rax + 12]
 
+    ; Add Idle State
     lea rdi, [player]
     mov esi, STATE_IDLE
     mov edx, DIRECTION_RIGHT
@@ -104,9 +91,60 @@ _start:
     mov r9d, 10
     call _AddAnimationState
 
+    ; Add Run State
+    lea rdi, [player]
+    mov esi, STATE_RUN
+    mov edx, DIRECTION_RIGHT
+    mov ecx, 6
+    mov r8d, 13
+    mov r9d, 10
+    call _AddAnimationState
+
+    lea rdi, [player]
+    mov esi, STATE_RUN
+    mov edx, DIRECTION_LEFT
+    mov ecx, 108
+    mov r8d, 113
+    mov r9d, 10
+    call _AddAnimationState
+
+    ; Add Jump State
+    lea rdi, [player]
+    mov esi, STATE_JUMP
+    mov edx, DIRECTION_RIGHT
+    mov ecx, 41
+    mov r8d, 43
+    mov r9d, 10
+    call _AddAnimationState
+
+    lea rdi, [player]
+    mov esi, STATE_JUMP
+    mov edx, DIRECTION_LEFT
+    mov ecx, 143
+    mov r8d, 145
+    mov r9d, 10
+    call _AddAnimationState
+
+    ; Add Fall State
+    lea rdi, [player]
+    mov esi, STATE_FALL
+    mov edx, DIRECTION_RIGHT
+    mov ecx, 46
+    mov r8d, 48
+    mov r9d, 10
+    call _AddAnimationState
+
+    lea rdi, [player]
+    mov esi, STATE_FALL
+    mov edx, DIRECTION_LEFT
+    mov ecx, 148
+    mov r8d, 150
+    mov r9d, 10
+    call _AddAnimationState
+
     lea rdi, [player]
     mov esi, STATE_IDLE
-    mov edx, DIRECTION_LEFT
+    mov edx, DIRECTION_RIGHT
     call _SetPlayerAnimation
 
     mov edi, 60

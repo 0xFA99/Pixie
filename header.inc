@@ -14,9 +14,9 @@ extrn BeginMode2D
 extrn EndMode2D
 extrn ClearBackground
 extrn LoadTexture
-extrn DrawTexture
 extrn DrawTexturePro
 extrn IsKeyDown
+extrn GetMouseWheelMove
 
 ; ======================
 ;        RayMath 

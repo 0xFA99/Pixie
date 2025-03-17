@@ -18,6 +18,32 @@ _UpdateCamera:
     addss xmm0, xmm1
     movss [rdi + 8], xmm0
 
+    call GetMouseWheelMove
+    movss xmm1, [cameraZoom]
+    mulss xmm1, xmm0
+    movss xmm0, [rdi + 20]
+    addss xmm0, xmm1
+    movss [rdi + 20], xmm0
+
+.cameraZoomMax:
+    mov eax, 3.0
+    movd xmm1, eax
+    movss xmm0, [rdi + 20]
+    comiss xmm0, xmm1
+    jbe .cameraZoomMin
+
+    movss [rdi + 20], xmm1
+
+.cameraZoomMin:
+    mov eax, 0.1
+    movd xmm0, eax
+    movss xmm1, [rdi + 20]
+    comiss xmm0, xmm1
+    jb .return
+
+    movss [rdi + 20], xmm0
+
+.return:
     pop rbp
     ret
 
