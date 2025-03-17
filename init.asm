@@ -1,94 +1,79 @@
-    ; Init Window
-    mov eax, 800
-    cvtsi2ss xmm0, eax
-    movss [gameWindow.width], xmm0
-
-    mov eax, 450
-    cvtsi2ss xmm0, eax
-    movss [gameWindow.height], xmm0
-
-    movss xmm0, [gameWindow.width]
-    cvtss2si edi, xmm0
-
-    movss xmm0, [gameWindow.height]
-    cvtss2si esi, xmm0
-
-    lea edx, [gameWindow.title]
-
-    call InitWindow
-
-    ; Init Player
+; rdi = Player*
+; [rbp - 8], Player*
+_InitPlayer:
     push rbp
     mov rbp, rsp
-    sub rsp, 32
 
-    call GetScreenWidth
-    sar eax, 1
-    cvtsi2ss xmm0, eax
-    movss [rbp - 4], xmm0
+    sub rsp, 8
+    mov [rbp - 8], rdi
 
-    call GetScreenHeight
-    sar eax, 1
-    cvtsi2ss xmm0, eax
-    movss [rbp - 8], xmm0
+    mov edi, 56
+    call malloc
+    test rax, rax
+    je .printErrorAllocation
+
+    ; Allocation memory for player.entity
+    mov rdx, [rbp - 8]
+    mov [rdx], rax
 
     pxor xmm0, xmm0
-    movss [rbp - 12], xmm0
-    movss [rbp - 16], xmm0
+    movsd [rdx + 16], xmm0  ; movement.position
+    movsd [rdx + 24], xmm0  ; movement.velocity
 
-    mov eax, 0xC3480000     ; -200
+    mov eax, -200.0
     movd xmm0, eax
-    movss [rbp - 20], xmm0
+    movss [rdx + 32], xmm0  ; movement.acceleration
 
-    mov eax, 0x42c80000     ; 100
+    mov eax, 100.0
     movd xmm0, eax
-    movss [rbp - 24], xmm0
+    movss [rdx + 36], xmm0  ; movement.speed
 
-    movss xmm0, [rbp - 4]
-    movss [player.movement.position.x], xmm0
-    movss xmm0, [rbp - 8]
-    movss [player.movement.position.y], xmm0
+    mov rax, [rdx]
+    pxor xmm0, xmm0
+    movss [rax + 52], xmm0
 
-    movss xmm0, [rbp - 12]
-    movss [player.movement.velocity.x], xmm0
-    movss xmm0, [rbp - 16]
-    movss [player.movement.velocity.y], xmm0
+.return:
+    add rsp, 8
 
-    movss xmm0, [rbp - 20]
-    movss [player.movement.acceleration], xmm0
-
-    movss xmm0, [rbp - 24]
-    movss [player.movement.speed], xmm0
-
-    add rsp, 32
     pop rbp
+    ret
 
-    ; Init Camera2D
-    mov eax, 2
-    cvtsi2ss xmm1, eax
-    pxor xmm0, xmm0
+.printErrorAllocation:
+    lea edi, [stringFormat]
+    lea esi, [failedAllocationMemory]
+    call printf
 
+    jmp .return
+
+; rdi = Camera*
+; rsi = Player*
+_InitCamera:
+    push rbp
+    mov rbp, rsp
+
+    ; Camera Offset
     call GetScreenWidth
-    cvtsi2ss xmm0, eax
-    divss xmm0, xmm1
-    movss [camera2D.offset.x], xmm0
-
+    sar rax, 1
+    cvtsi2ss xmm0, rax
     call GetScreenHeight
-    cvtsi2ss xmm0, eax
-    divss xmm0, xmm1
-    movss [camera2D.offset.y], xmm0
+    sar rax, 1
+    cvtsi2ss xmm1, rax
+    movss [rdi], xmm0
+    movss [rdi + 4], xmm1
 
+    ; Camera Target
+    movsd xmm0, [rsi + 16]
+    movsd [rdi + 12], xmm0
+
+    ; Camera Rotation
     pxor xmm0, xmm0
-    movsd [camera2D.target], xmm0
+    movss [rdi + 16], xmm0
 
-    movss [camera2D.rotation], xmm0
-
+    ; Camera Zoom
     mov eax, 1
     cvtsi2ss xmm0, eax
-    movss [camera2D.zoom], xmm0
+    movss [rdi + 20], xmm0
 
-    ; Camera zoom level
-    mov eax, 0x3D4CCCCD
-    movd xmm0, eax
-    movss [cameraZoomLevel], xmm0
+    pop rbp
+    ret
 
