@@ -9,9 +9,6 @@ _InitPlayer:
 
     mov edi, 56
     call malloc
-    test rax, rax
-    je .printErrorAllocation
-
     ; Allocation memory for player.entity
     mov rdx, [rbp - 8]
     mov [rdx], rax
@@ -32,18 +29,10 @@ _InitPlayer:
     pxor xmm0, xmm0
     movss [rax + 52], xmm0
 
-.return:
     add rsp, 8
 
     pop rbp
     ret
-
-.printErrorAllocation:
-    lea edi, [stringFormat]
-    lea esi, [failedAllocationMemory]
-    call printf
-
-    jmp .return
 
 ; rdi = Camera*
 ; rsi = Player*

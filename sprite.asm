@@ -1,9 +1,9 @@
-; ========== PARAMETERS ==========
+; ============== PARAMETERS ==============
 ; [rbp -  8]    = file
 ; [rbp - 12]    = rows
 ; [rbp - 16]    = columns
 
-; ========= SPRITESHEET ==========
+; ============= SPRITESHEET ==============
 ; [rbp - 20]    = Texture.format
 ; [rbp - 24]    = Texture.mipmaps
 ; [rbp - 28]    = Texture.height
@@ -12,12 +12,13 @@
 ; [rbp - 44]    = Frames*
 ; [rbp - 48]    = FrameCount
 
-; ========== VARIABLES ===========
+; ============== VARIABLES ===============
 ; [rbp - 52]    = width
 ; [rbp - 56]    = height
 ; [rbp - 60]    = counter
 ; [rbp - 64]    = index row
 ; [rbp - 68]    = index column
+
 _LoadSpriteSheet:
     push rbp
     mov rbp, rsp
@@ -130,11 +131,15 @@ _LoadSpriteSheet:
     pop rbp
     ret
 
+; ============== PARAMETERS ==============
 ; [rbp - 8]     = Player*
+
+; ============== VARIABLES ===============
 ; [rbp - 12]    = Original FrameCount
 ; [rbp - 16]    = New FrameCount
 ; [rbp - 20]    = Index
 ; [rbp - 36]    = Temporary Rectangle
+
 _AddFlipSpriteSheet:
     push rbp
     mov rbp, rsp
@@ -224,85 +229,3 @@ _AddFlipSpriteSheet:
     pop rbp
     ret
 
-; _AddFlipSpriteSheet:
-;     push rbp
-;     mov rbp, rsp
-;     sub rsp, 48
-; 
-;     mov [rbp - 8], rdi
-; 
-;     mov rax, [rbp - 8]
-;     mov rax, [rax]
-;     mov eax, [rax + 32]
-;     mov [rbp - 12], eax
-; 
-;     add eax, eax
-;     mov [rbp - 16], eax
-; 
-;     mov rax, [rbp - 8]
-;     mov rax, [rax]
-;     mov rdi, [rax + 24]
-;     mov eax, [rbp - 16]
-;     imul eax, 16
-;     cdqe
-;     mov rsi, rax
-;     call realloc
-;     mov rdx, [rbp - 8]
-;     mov rdx, [rdx]
-;     mov [rdx + 24], rax
-; 
-;     mov dword [rbp - 20], 0
-; 
-;     jmp .L1
-; 
-; .L2:
-;     mov rax, [rbp - 8]
-;     mov rax, [rax]
-;     mov rdx, [rax + 24]
-;     mov eax, [rbp - 20]
-;     imul eax, 16
-;     cdqe
-;     add rax, rdx
-; 
-;     movsd xmm0, [rax]
-;     movsd xmm1, [rax + 8]
-;     movsd [rbp - 28], xmm0
-;     movsd [rbp - 36], xmm1
-; 
-;     mov rax, [rbp - 8]
-;     mov rax, [rax]
-;     mov rdx, [rax + 24]
-;     mov eax, [rbp - 12]
-;     add eax, [rbp - 20]
-;     imul eax, 16
-;     cdqe
-;     add rax, rdx
-; 
-;     movsd xmm0, [rbp - 28]
-;     movsd [rax], xmm0
-; 
-;     movss xmm0, [rbp - 36]
-;     mov edx, -0.0
-;     movd xmm1, edx
-;     xorps xmm0, xmm1
-;     movss [rax + 8], xmm0
-; 
-;     movss xmm0, [rbp - 32]
-;     movss [rax + 12], xmm0
-; 
-;     add dword [rbp - 20], 1 
-; 
-; .L1:
-;     mov eax, [rbp - 20]
-;     cmp eax, [rbp - 12]
-;     jl .L2
-; 
-;     mov rax, [rbp - 8]
-;     mov rax, [rax]
-;     mov edx, [rbp - 16]
-;     mov [rax + 32], edx
-; 
-;     add rsp, 48
-;     pop rbp
-;     ret
-; 

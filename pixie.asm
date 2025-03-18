@@ -2,12 +2,9 @@ format ELF64
 
 include 'header.inc'
 include 'struct.inc'
-include 'string.inc'
 
 section '.text' executable
-
 public _start
-public _start.debug
 
 include 'init.asm'
 include 'sprite.asm'
@@ -59,20 +56,6 @@ _start:
 
     lea rdi, [player]
     call _AddFlipSpriteSheet
-
-.debug:
-    lea rax, [player]
-    mov rax, [rax]
-    mov rdx, [rax + 24]
-    lea rax, [player]
-    mov eax, [rax + 48]
-    imul eax, 16
-    cdqe
-    add rax, rdx
-    movss xmm0, [rax]
-    movss xmm0, [rax + 4]
-    movss xmm0, [rax + 8]
-    movss xmm0, [rax + 12]
 
     ; Add Idle State
     lea rdi, [player]
@@ -203,9 +186,14 @@ section '.data' writeable
 gameWindow      GameWindow
 player          Player
 camera          Camera
+
+section '.rodata'
 cameraZoom      dd 0.05
 gravity         dd 500.0
 warriorSheet    db "warrior.png", 0x00
+background_file db "cyberpunk_street_background.png", 0x0
+midground_file  db "cyberpunk_street_midground.png", 0x0
+foreground_file db "cyberpunk_street_foreground.png", 0x0
 
 section '.note.GNU-stack'
 

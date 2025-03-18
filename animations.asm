@@ -1,11 +1,14 @@
-; [rbp - 8],    rdi = entity*
-; [rbp - 12],   esi = state
-; [rbp - 16],   edx = direction
-; [rbp - 20],   ecx = start
-; [rbp - 24],   r8d = end
-; [rbp - 28],   r9d = FPS
+; ============== PARAMETERS ==============
+; [rbp -  8]    = Player*
+; [rbp - 12]    = int state
+; [rbp - 16]    = int direction
+; [rbp - 20]    = int start
+; [rbp - 24]    = int end
+; [rbp - 28]    = int FPS
 
-; [rbp - 36],   struct AnimationState*
+; ============== VARIABLES ===============
+; [rbp - 36]    = AnimationState*
+
 _AddAnimationState:
     push rbp
     mov rbp, rsp
@@ -82,17 +85,15 @@ _AddAnimationState:
     pop rbp
     ret
 
-; rdi = Player*
-; esi = state
-; edx = direction
+; ============== PARAMETERS ==============
+; [rbp -  8]    = Player*
+; [rbp - 12]    = int state
+; [rbp - 16]    = int direction
 
-; [rbp - 8], player*
-; [rbp - 12], state
-; [rbp - 16], direction
-; [rbp - 20], index
+; ============== VARIABLES ===============
+; [rbp - 20]    = int index
+; [rbp - 40]    = struct AnimationStates
 
-; [rbp - 40], struct AnimationStates
-public _SetPlayerAnimation
 _SetPlayerAnimation:
     push rbp
     mov rbp, rsp

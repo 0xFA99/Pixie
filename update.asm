@@ -1,6 +1,7 @@
+; ============== PARAMETERS ==============
 ; rdi = Camera*
 ; rsi = Player*
-public _UpdateCamera
+
 _UpdateCamera:
     push rbp
     mov rbp, rsp
@@ -47,7 +48,6 @@ _UpdateCamera:
     pop rbp
     ret
 
-public _UpdatePlayer
 _UpdatePlayer:
     push rbp
     mov rbp, rsp

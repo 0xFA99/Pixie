@@ -15,8 +15,10 @@ extrn EndMode2D
 extrn ClearBackground
 extrn LoadTexture
 extrn DrawTexturePro
+extrn DrawText
 extrn IsKeyDown
 extrn GetMouseWheelMove
+extrn GetFPS
 
 ; ======================
 ;        RayMath 
@@ -31,6 +33,7 @@ extrn printf
 extrn malloc
 extrn realloc
 extrn getchar
+extrn snprintf
 
 ; ======================
 ;         PIXIE 
