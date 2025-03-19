@@ -15,6 +15,7 @@ extrn EndMode2D
 extrn ClearBackground
 extrn LoadTexture
 extrn DrawTexturePro
+extrn DrawTextureEx
 extrn DrawText
 extrn IsKeyDown
 extrn GetMouseWheelMove

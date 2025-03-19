@@ -51,17 +51,47 @@ _InitCamera:
     movss [rdi + 4], xmm1
 
     ; Camera Target
-    movsd xmm0, [rsi + 16]
-    movsd [rdi + 12], xmm0
+    ; movsd xmm0, [rsi + 16]
+    ; movsd [rdi + 12], xmm0
+
+    movss xmm0, [rsi + 12]
+    movss [rdi + 8], xmm0
+
+    mov eax, -70.0
+    movd xmm0, eax
+    movss [rdi + 12], xmm0
 
     ; Camera Rotation
     pxor xmm0, xmm0
     movss [rdi + 16], xmm0
 
     ; Camera Zoom
-    mov eax, 1
-    cvtsi2ss xmm0, eax
+    ; mov eax, 1
+    ; cvtsi2ss xmm0, eax
+    ; movss [rdi + 20], xmm0
+
+    mov eax, 1.5
+    movd xmm0, eax
     movss [rdi + 20], xmm0
+
+    pop rbp
+    ret
+
+_InitBackground:
+    push rbp
+    mov rbp, rsp
+
+    lea rdi, [background]
+    lea rsi, [background_file]
+    call LoadTexture
+
+    lea rdi, [midground]
+    lea rsi, [midground_file]
+    call LoadTexture
+
+    lea rdi, [foreground]
+    lea rsi, [foreground_file]
+    call LoadTexture
 
     pop rbp
     ret

@@ -98,3 +98,372 @@ _RenderPlayer:
     pop rbp
     ret
 
+_RenderBackground:
+    push rbp
+    mov rbp, rsp
+    sub rsp, 16
+
+;   ========== BACKGROUND BACK =============
+    mov eax, [background + 4]
+    cvtsi2ss xmm0, eax
+    addss xmm0, xmm0
+
+    mov eax, -0.0
+    movd xmm1, eax
+    xorps xmm0, xmm1
+
+    movss xmm1, [backgroundScrolling]
+    addss xmm0, xmm1
+
+    movss [rbp - 8], xmm0
+
+    pxor xmm0, xmm0
+    movss [rbp - 4], xmm0
+
+    ; Texture
+    sub rsp, 16
+    mov rcx, rsp
+    mov rax, [background]
+    mov rdx, [background + 8]
+    mov [rcx], rax
+    mov [rcx + 8], rdx
+    mov eax, [background + 16]
+    mov [rcx + 16], eax
+
+    ; Position
+    mov rsi, [rbp - 8]
+    movq xmm0, rsi
+
+    ; Rotation
+    pxor xmm1, xmm1
+
+    ; Scale
+    mov eax, 2.0
+    movd xmm2, eax
+
+    ; Color
+    mov edi, -1
+
+    call DrawTextureEx
+    add rsp, 16
+
+;   ========== BACKGROUND =============
+    ; Vector2 Position
+    movss xmm0, [backgroundScrolling]
+    movss [rbp - 8], xmm0
+
+    ; mov eax, 20.0
+    ; movd xmm0, eax
+    pxor xmm0, xmm0
+    movss [rbp - 4], xmm0
+
+    ; Texture
+    sub rsp, 16
+    mov rcx, rsp
+    mov rax, [background]
+    mov rdx, [background + 8]
+    mov [rcx], rax
+    mov [rcx + 8], rdx
+    mov eax, [background + 16]
+    mov [rcx + 16], eax
+
+    ; Position
+    mov rsi, [rbp - 8]
+    movq xmm0, rsi
+
+    ; Rotation
+    pxor xmm1, xmm1
+
+    ; Scale
+    mov eax, 2.0
+    movd xmm2, eax
+
+    ; Color
+    mov edi, -1
+
+    call DrawTextureEx
+    add rsp, 16
+
+;   ========== BACKGROUND FORWARD =============
+    movss xmm1, [backgroundScrolling]
+    mov eax, [background + 4]
+    cvtsi2ss xmm0, eax
+    addss xmm0, xmm0
+    addss xmm0, xmm1
+    movss [rbp - 8], xmm0
+
+    ; mov eax, 20.0
+    ; movd xmm0, eax
+    pxor xmm0, xmm0
+    movss [rbp - 4], xmm0
+
+    ; Texture
+    sub rsp, 16
+    mov rcx, rsp
+    mov rax, [background]
+    mov rdx, [background + 8]
+    mov [rcx], rax
+    mov [rcx + 8], rdx
+    mov eax, [background + 16]
+    mov [rcx + 16], eax
+
+    ; Position
+    mov rsi, [rbp - 8]
+    movq xmm0, rsi
+
+    ; Rotation
+    pxor xmm1, xmm1
+
+    ; Scale
+    mov eax, 2.0
+    movd xmm2, eax
+
+    ; Color
+    mov edi, -1
+
+    call DrawTextureEx
+    add rsp, 16
+
+;   ========== MIDGROUND BACK =============
+    mov eax, [midground + 4]
+    cvtsi2ss xmm0, eax
+    addss xmm0, xmm0
+
+    mov eax, -0.0
+    movd xmm1, eax
+    xorps xmm0, xmm1
+
+    movss xmm1, [midgroundScrolling]
+    addss xmm0, xmm1
+
+    movss [rbp - 8], xmm0
+
+    mov eax, 20.0
+    movd xmm0, eax
+    movss [rbp - 4], xmm0
+
+    ; Texture
+    sub rsp, 16
+    mov rcx, rsp
+    mov rax, [midground]
+    mov rdx, [midground + 8]
+    mov [rcx], rax
+    mov [rcx + 8], rdx
+    mov eax, [midground + 16]
+    mov [rcx + 16], eax
+
+    ; Position
+    mov rsi, [rbp - 8]
+    movq xmm0, rsi
+
+    ; Rotation
+    pxor xmm1, xmm1
+
+    ; Scale
+    mov eax, 2.0
+    movd xmm2, eax
+
+    ; Color
+    mov edi, -1
+
+    call DrawTextureEx
+    add rsp, 16
+
+;   ========== MIDGROUND =============
+    ; Vector2 Position
+    movss xmm0, [midgroundScrolling]
+    movss [rbp - 8], xmm0
+
+    mov eax, 20.0
+    movd xmm0, eax
+    movss [rbp - 4], xmm0
+
+    ; Texture
+    sub rsp, 16
+    mov rcx, rsp
+    mov rax, [midground]
+    mov rdx, [midground + 8]
+    mov [rcx], rax
+    mov [rcx + 8], rdx
+    mov eax, [midground + 16]
+    mov [rcx + 16], eax
+
+    ; Position
+    mov rsi, [rbp - 8]
+    movq xmm0, rsi
+
+    ; Rotation
+    pxor xmm1, xmm1
+
+    ; Scale
+    mov eax, 2.0
+    movd xmm2, eax
+
+    ; Color
+    mov edi, -1
+
+    call DrawTextureEx
+    add rsp, 16
+
+;   ========== MIDGROUND FORWARD =============
+    movss xmm1, [midgroundScrolling]
+    mov eax, [midground + 4]
+    cvtsi2ss xmm0, eax
+    addss xmm0, xmm0
+    addss xmm0, xmm1
+    movss [rbp - 8], xmm0
+
+    mov eax, 20.0
+    movd xmm0, eax
+    movss [rbp - 4], xmm0
+
+    ; Texture
+    sub rsp, 16
+    mov rcx, rsp
+    mov rax, [midground]
+    mov rdx, [midground + 8]
+    mov [rcx], rax
+    mov [rcx + 8], rdx
+    mov eax, [midground + 16]
+    mov [rcx + 16], eax
+
+    ; Position
+    mov rsi, [rbp - 8]
+    movq xmm0, rsi
+
+    ; Rotation
+    pxor xmm1, xmm1
+
+    ; Scale
+    mov eax, 2.0
+    movd xmm2, eax
+
+    ; Color
+    mov edi, -1
+
+    call DrawTextureEx
+    add rsp, 16
+
+;   ========== foreGROUND BACK =============
+    mov eax, [foreground + 4]
+    cvtsi2ss xmm0, eax
+    addss xmm0, xmm0
+
+    mov eax, -0.0
+    movd xmm1, eax
+    xorps xmm0, xmm1
+
+    movss xmm1, [foregroundScrolling]
+    addss xmm0, xmm1
+
+    movss [rbp - 8], xmm0
+
+    mov eax, 70.0
+    movd xmm0, eax
+    movss [rbp - 4], xmm0
+
+    ; Texture
+    sub rsp, 16
+    mov rcx, rsp
+    mov rax, [foreground]
+    mov rdx, [foreground + 8]
+    mov [rcx], rax
+    mov [rcx + 8], rdx
+    mov eax, [foreground + 16]
+    mov [rcx + 16], eax
+
+    ; Position
+    mov rsi, [rbp - 8]
+    movq xmm0, rsi
+
+    ; Rotation
+    pxor xmm1, xmm1
+
+    ; Scale
+    mov eax, 2.0
+    movd xmm2, eax
+
+    ; Color
+    mov edi, -1
+
+    call DrawTextureEx
+    add rsp, 16
+
+;   ========== foreGROUND =============
+    ; Vector2 Position
+    movss xmm0, [foregroundScrolling]
+    movss [rbp - 8], xmm0
+
+    mov eax, 70.0
+    movd xmm0, eax
+    movss [rbp - 4], xmm0
+
+    ; Texture
+    sub rsp, 16
+    mov rcx, rsp
+    mov rax, [foreground]
+    mov rdx, [foreground + 8]
+    mov [rcx], rax
+    mov [rcx + 8], rdx
+    mov eax, [foreground + 16]
+    mov [rcx + 16], eax
+
+    ; Position
+    mov rsi, [rbp - 8]
+    movq xmm0, rsi
+
+    ; Rotation
+    pxor xmm1, xmm1
+
+    ; Scale
+    mov eax, 2.0
+    movd xmm2, eax
+
+    ; Color
+    mov edi, -1
+
+    call DrawTextureEx
+    add rsp, 16
+
+;   ========== foreGROUND FORWARD =============
+    movss xmm1, [foregroundScrolling]
+    mov eax, [foreground + 4]
+    cvtsi2ss xmm0, eax
+    addss xmm0, xmm0
+    addss xmm0, xmm1
+    movss [rbp - 8], xmm0
+
+    mov eax, 70.0
+    movd xmm0, eax
+    movss [rbp - 4], xmm0
+
+    ; Texture
+    sub rsp, 16
+    mov rcx, rsp
+    mov rax, [foreground]
+    mov rdx, [foreground + 8]
+    mov [rcx], rax
+    mov [rcx + 8], rdx
+    mov eax, [foreground + 16]
+    mov [rcx + 16], eax
+
+    ; Position
+    mov rsi, [rbp - 8]
+    movq xmm0, rsi
+
+    ; Rotation
+    pxor xmm1, xmm1
+
+    ; Scale
+    mov eax, 2.0
+    movd xmm2, eax
+
+    ; Color
+    mov edi, -1
+
+    call DrawTextureEx
+    add rsp, 16
+    add rsp, 16
+    pop rbp
+    ret
+

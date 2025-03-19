@@ -168,3 +168,162 @@ _UpdatePlayer:
     pop rbp
     ret
 
+_UpdateBackground:
+    push rbp
+    mov rbp, rsp
+
+.checkRightKey:
+    mov edi, 262
+    call IsKeyDown
+    test al, al
+    je .checkLeftKey
+
+    mov eax, 0.5
+    movd xmm1, eax
+    movss xmm0, [backgroundScrolling]
+    subss xmm0, xmm1
+    movss [backgroundScrolling], xmm0
+
+    mov eax, 1.0
+    movd xmm1, eax
+    movss xmm0, [midgroundScrolling]
+    subss xmm0, xmm1
+    movss [midgroundScrolling], xmm0
+
+    mov eax, 2.0
+    movd xmm1, eax
+    movss xmm0, [foregroundScrolling]
+    subss xmm0, xmm1
+    movss [foregroundScrolling], xmm0
+
+.checkLeftKey:
+    mov edi, 263
+    call IsKeyDown
+    test al, al
+    je .checkLimitBackgroundLeft
+
+    mov eax, 0.5
+    movd xmm1, eax
+    movss xmm0, [backgroundScrolling]
+    addss xmm0, xmm1
+    movss [backgroundScrolling], xmm0
+
+    mov eax, 1.0
+    movd xmm1, eax
+    movss xmm0, [midgroundScrolling]
+    addss xmm0, xmm1
+    movss [midgroundScrolling], xmm0
+
+    mov eax, 2.0
+    movd xmm1, eax
+    movss xmm0, [foregroundScrolling]
+    addss xmm0, xmm1
+    movss [foregroundScrolling], xmm0
+
+; .checkLimits:
+;     cvtsi2ss xmm0, [foreground + 4]
+;     addss xmm0, xmm0
+;     mov eax, -0.0
+;     movd xmm1, eax
+;     xorps xmm0, xmm1
+; 
+;     movss xmm1, [foregroundScrolling]
+;     comiss xmm0, xmm1
+;     jb .checkBackgroundRightLimit
+; 
+;     pxor xmm0, xmm0
+;     movss [foregroundScrolling], xmm0
+; 
+; .checkBackgroundRightLimit:
+;     cvtsi2ss xmm0, [foreground + 4]
+;     addss xmm0, xmm0
+;     movss xmm1, [foregroundScrolling]
+;     comiss xmm1, xmm0
+;     jb .return
+; 
+;     pxor xmm0, xmm0
+;     movss [foregroundScrolling], xmm0
+
+
+.checkLimitBackgroundLeft:
+    cvtsi2ss xmm0, [background + 4]
+    addss xmm0, xmm0
+    mov eax, -0.0
+    movd xmm1, eax
+    xorps xmm0, xmm1
+
+    movss xmm1, [backgroundScrolling]
+    comiss xmm0, xmm1
+    jb .checkLimitMidgroundLeft
+
+    pxor xmm0, xmm0
+    movss [backgroundScrolling], xmm0
+
+.checkLimitMidgroundLeft:
+    cvtsi2ss xmm0, [midground + 4]
+    addss xmm0, xmm0
+    mov eax, -0.0
+    movd xmm1, eax
+    xorps xmm0, xmm1
+
+    movss xmm1, [midgroundScrolling]
+    comiss xmm0, xmm1
+    jb .checkLimitForegroundLeft
+
+    pxor xmm0, xmm0
+    movss [midgroundScrolling], xmm0
+
+    pxor xmm0, xmm0
+    movss [backgroundScrolling], xmm0
+
+.checkLimitForegroundLeft:
+    cvtsi2ss xmm0, [foreground + 4]
+    addss xmm0, xmm0
+    mov eax, -0.0
+    movd xmm1, eax
+    xorps xmm0, xmm1
+
+    movss xmm1, [foregroundScrolling]
+    comiss xmm0, xmm1
+    jb .checkLimitBackgroundRight
+
+    pxor xmm0, xmm0
+    movss [foregroundScrolling], xmm0
+
+    pxor xmm0, xmm0
+    movss [foregroundScrolling], xmm0
+
+.checkLimitBackgroundRight:
+    cvtsi2ss xmm0, [background + 4]
+    addss xmm0, xmm0
+    movss xmm1, [backgroundScrolling]
+    comiss xmm1, xmm0
+    jb .checkLimitMidgroundRight
+    
+    pxor xmm0, xmm0
+    movss [backgroundScrolling], xmm0
+
+.checkLimitMidgroundRight:
+    cvtsi2ss xmm0, [midground + 4]
+    addss xmm0, xmm0
+    movss xmm1, [midgroundScrolling]
+    comiss xmm1, xmm0
+    jb .checkLimitForegroundRight
+    
+    pxor xmm0, xmm0
+    movss [foregroundScrolling], xmm0
+
+.checkLimitForegroundRight:
+    cvtsi2ss xmm0, [foreground + 4]
+    addss xmm0, xmm0
+    movss xmm1, [foregroundScrolling]
+    comiss xmm1, xmm0
+    jb .return
+    
+    pxor xmm0, xmm0
+    movss [foregroundScrolling], xmm0
+
+.return:
+    pop rbp
+    ret
+

@@ -87,7 +87,7 @@ _start:
     mov esi, STATE_RUN
     mov edx, DIRECTION_LEFT
     mov ecx, 108
-    mov r8d, 113
+    mov r8d, 115
     mov r9d, 10
     call _AddAnimationState
 
@@ -130,6 +130,8 @@ _start:
     mov edx, DIRECTION_RIGHT
     call _SetPlayerAnimation
 
+    call _InitBackground
+
     mov edi, 60
     call SetTargetFPS
 
@@ -151,10 +153,14 @@ _start:
     lea rsi, [player]
     call _UpdateCamera
 
+    call _UpdateBackground
+
     call BeginDrawing
 
     mov edi, 0xFF181818
     call ClearBackground
+
+    call _RenderBackground
 
     sub rsp, 16
     lea rax, [camera]
@@ -182,18 +188,23 @@ _start:
     syscall
 
 section '.data' writeable
-
-gameWindow      GameWindow
-player          Player
-camera          Camera
+gameWindow          GameWindow
+player              Player
+camera              Camera
+background          Texture
+midground           Texture
+foreground          Texture
+backgroundScrolling dd 0.0
+midgroundScrolling  dd 0.0
+foregroundScrolling dd 0.0
 
 section '.rodata'
-cameraZoom      dd 0.05
-gravity         dd 500.0
-warriorSheet    db "warrior.png", 0x00
-background_file db "cyberpunk_street_background.png", 0x0
-midground_file  db "cyberpunk_street_midground.png", 0x0
-foreground_file db "cyberpunk_street_foreground.png", 0x0
+cameraZoom          dd 0.05
+gravity             dd 500.0
+warriorSheet        db "warrior.png", 0x00
+background_file     db "cyberpunk_street_background.png", 0x0
+midground_file      db "cyberpunk_street_midground.png", 0x0
+foreground_file     db "cyberpunk_street_foreground.png", 0x0
 
 section '.note.GNU-stack'
 
