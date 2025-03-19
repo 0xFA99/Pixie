@@ -2,6 +2,7 @@ format ELF64
 
 include 'header.inc'
 include 'struct.inc'
+include 'macros.inc'
 
 section '.text' executable
 public _start
@@ -58,79 +59,27 @@ _start:
     call _AddFlipSpriteSheet
 
     ; Add Idle State
-    lea rdi, [player]
-    mov esi, STATE_IDLE
-    mov edx, DIRECTION_RIGHT
-    mov ecx, 0
-    mov r8d, 5
-    mov r9d, 10
-    call _AddAnimationState
-
-    lea rdi, [player]
-    mov esi, STATE_IDLE
-    mov edx, DIRECTION_LEFT
-    mov ecx, 102
-    mov r8d, 107
-    mov r9d, 10
-    call _AddAnimationState
+    AddAnimationState player, STATE_IDLE, DIRECTION_RIGHT, 0, 5, 10
+    AddAnimationState player, STATE_IDLE, DIRECTION_LEFT, 102, 107, 10
 
     ; Add Run State
-    lea rdi, [player]
-    mov esi, STATE_RUN
-    mov edx, DIRECTION_RIGHT
-    mov ecx, 6
-    mov r8d, 13
-    mov r9d, 10
-    call _AddAnimationState
-
-    lea rdi, [player]
-    mov esi, STATE_RUN
-    mov edx, DIRECTION_LEFT
-    mov ecx, 108
-    mov r8d, 115
-    mov r9d, 10
-    call _AddAnimationState
+    AddAnimationState player, STATE_RUN, DIRECTION_RIGHT, 6, 13, 10
+    AddAnimationState player, STATE_RUN, DIRECTION_LEFT, 108, 115, 10
 
     ; Add Jump State
-    lea rdi, [player]
-    mov esi, STATE_JUMP
-    mov edx, DIRECTION_RIGHT
-    mov ecx, 41
-    mov r8d, 43
-    mov r9d, 10
-    call _AddAnimationState
-
-    lea rdi, [player]
-    mov esi, STATE_JUMP
-    mov edx, DIRECTION_LEFT
-    mov ecx, 143
-    mov r8d, 145
-    mov r9d, 10
-    call _AddAnimationState
+    AddAnimationState player, STATE_JUMP, DIRECTION_RIGHT, 41, 43, 10
+    AddAnimationState player, STATE_JUMP, DIRECTION_LEFT, 143, 145, 10
 
     ; Add Fall State
-    lea rdi, [player]
-    mov esi, STATE_FALL
-    mov edx, DIRECTION_RIGHT
-    mov ecx, 46
-    mov r8d, 48
-    mov r9d, 10
-    call _AddAnimationState
-
-    lea rdi, [player]
-    mov esi, STATE_FALL
-    mov edx, DIRECTION_LEFT
-    mov ecx, 148
-    mov r8d, 150
-    mov r9d, 10
-    call _AddAnimationState
+    AddAnimationState player, STATE_FALL, DIRECTION_RIGHT, 46, 48, 10
+    AddAnimationState player, STATE_FALL, DIRECTION_LEFT, 148, 150, 10
 
     lea rdi, [player]
     mov esi, STATE_IDLE
     mov edx, DIRECTION_RIGHT
     call _SetPlayerAnimation
 
-    call _InitBackground
+    call _InitParallaxBackground
 
     mov edi, 60
     call SetTargetFPS
@@ -153,14 +102,14 @@ _start:
     lea rsi, [player]
     call _UpdateCamera
 
-    call _UpdateBackground
+    call _UpdateParallax
 
     call BeginDrawing
 
     mov edi, 0xFF181818
     call ClearBackground
 
-    call _RenderBackground
+    call _RenderParallax
 
     sub rsp, 16
     lea rax, [camera]
@@ -201,10 +150,10 @@ foregroundScrolling dd 0.0
 section '.rodata'
 cameraZoom          dd 0.05
 gravity             dd 500.0
-warriorSheet        db "warrior.png", 0x00
-background_file     db "cyberpunk_street_background.png", 0x0
-midground_file      db "cyberpunk_street_midground.png", 0x0
-foreground_file     db "cyberpunk_street_foreground.png", 0x0
+warriorSheet        db "assets/character/warrior.png", 0x00
+background_file     db "assets/background/cyberpunk_street_background.png", 0x0
+midground_file      db "assets/background/cyberpunk_street_midground.png", 0x0
+foreground_file     db "assets/background/cyberpunk_street_foreground.png", 0x0
 
 section '.note.GNU-stack'
 

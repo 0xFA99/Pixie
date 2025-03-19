@@ -121,8 +121,7 @@ _UpdatePlayer:
     addss xmm0, [rbp - 16]
     movss [rax], xmm0
 
-    ; 1.0f 0x3F800000
-    mov eax, 0x3F800000
+    mov eax, 1.0
     movd xmm0, eax
     movss [rbp - 32], xmm0
 
@@ -168,160 +167,47 @@ _UpdatePlayer:
     pop rbp
     ret
 
-_UpdateBackground:
+_UpdateParallax:
     push rbp
     mov rbp, rsp
 
-.checkRightKey:
+.checkKeyRight:
     mov edi, 262
     call IsKeyDown
     test al, al
-    je .checkLeftKey
+    je .checkKeyLeft
 
-    mov eax, 0.5
-    movd xmm1, eax
-    movss xmm0, [backgroundScrolling]
-    subss xmm0, xmm1
-    movss [backgroundScrolling], xmm0
+    ScrollingParallax backgroundScrolling, -0.5
+    ScrollingParallax midgroundScrolling, -1.0
+    ScrollingParallax foregroundScrolling, -2.0
 
-    mov eax, 1.0
-    movd xmm1, eax
-    movss xmm0, [midgroundScrolling]
-    subss xmm0, xmm1
-    movss [midgroundScrolling], xmm0
-
-    mov eax, 2.0
-    movd xmm1, eax
-    movss xmm0, [foregroundScrolling]
-    subss xmm0, xmm1
-    movss [foregroundScrolling], xmm0
-
-.checkLeftKey:
+.checkKeyLeft:
     mov edi, 263
     call IsKeyDown
     test al, al
-    je .checkLimitBackgroundLeft
+    je .checkBackgroundLimitLeft
 
-    mov eax, 0.5
-    movd xmm1, eax
-    movss xmm0, [backgroundScrolling]
-    addss xmm0, xmm1
-    movss [backgroundScrolling], xmm0
+    ScrollingParallax backgroundScrolling, 0.5
+    ScrollingParallax midgroundScrolling, 1.0
+    ScrollingParallax foregroundScrolling, 2.0
 
-    mov eax, 1.0
-    movd xmm1, eax
-    movss xmm0, [midgroundScrolling]
-    addss xmm0, xmm1
-    movss [midgroundScrolling], xmm0
-
-    mov eax, 2.0
-    movd xmm1, eax
-    movss xmm0, [foregroundScrolling]
-    addss xmm0, xmm1
-    movss [foregroundScrolling], xmm0
-
-; .checkLimits:
-;     cvtsi2ss xmm0, [foreground + 4]
-;     addss xmm0, xmm0
-;     mov eax, -0.0
-;     movd xmm1, eax
-;     xorps xmm0, xmm1
-; 
-;     movss xmm1, [foregroundScrolling]
-;     comiss xmm0, xmm1
-;     jb .checkBackgroundRightLimit
-; 
-;     pxor xmm0, xmm0
-;     movss [foregroundScrolling], xmm0
-; 
-; .checkBackgroundRightLimit:
-;     cvtsi2ss xmm0, [foreground + 4]
-;     addss xmm0, xmm0
-;     movss xmm1, [foregroundScrolling]
-;     comiss xmm1, xmm0
-;     jb .return
-; 
-;     pxor xmm0, xmm0
-;     movss [foregroundScrolling], xmm0
-
-
-.checkLimitBackgroundLeft:
-    cvtsi2ss xmm0, [background + 4]
-    addss xmm0, xmm0
-    mov eax, -0.0
-    movd xmm1, eax
-    xorps xmm0, xmm1
-
-    movss xmm1, [backgroundScrolling]
-    comiss xmm0, xmm1
-    jb .checkLimitMidgroundLeft
-
-    pxor xmm0, xmm0
-    movss [backgroundScrolling], xmm0
+.checkBackgroundLimitLeft:
+    CheckParallaxLimit background, backgroundScrolling, .checkLimitMidgroundLeft, DIRECTION_LEFT
 
 .checkLimitMidgroundLeft:
-    cvtsi2ss xmm0, [midground + 4]
-    addss xmm0, xmm0
-    mov eax, -0.0
-    movd xmm1, eax
-    xorps xmm0, xmm1
-
-    movss xmm1, [midgroundScrolling]
-    comiss xmm0, xmm1
-    jb .checkLimitForegroundLeft
-
-    pxor xmm0, xmm0
-    movss [midgroundScrolling], xmm0
-
-    pxor xmm0, xmm0
-    movss [backgroundScrolling], xmm0
+    CheckParallaxLimit midground, midgroundScrolling, .checkLimitForegroundLeft, DIRECTION_LEFT
 
 .checkLimitForegroundLeft:
-    cvtsi2ss xmm0, [foreground + 4]
-    addss xmm0, xmm0
-    mov eax, -0.0
-    movd xmm1, eax
-    xorps xmm0, xmm1
-
-    movss xmm1, [foregroundScrolling]
-    comiss xmm0, xmm1
-    jb .checkLimitBackgroundRight
-
-    pxor xmm0, xmm0
-    movss [foregroundScrolling], xmm0
-
-    pxor xmm0, xmm0
-    movss [foregroundScrolling], xmm0
+    CheckParallaxLimit foreground, foregroundScrolling, .checkLimitBackgroundRight, DIRECTION_LEFT
 
 .checkLimitBackgroundRight:
-    cvtsi2ss xmm0, [background + 4]
-    addss xmm0, xmm0
-    movss xmm1, [backgroundScrolling]
-    comiss xmm1, xmm0
-    jb .checkLimitMidgroundRight
-    
-    pxor xmm0, xmm0
-    movss [backgroundScrolling], xmm0
+    CheckParallaxLimit background, backgroundScrolling, .checkLimitMidgroundRight, DIRECTION_RIGHT
 
 .checkLimitMidgroundRight:
-    cvtsi2ss xmm0, [midground + 4]
-    addss xmm0, xmm0
-    movss xmm1, [midgroundScrolling]
-    comiss xmm1, xmm0
-    jb .checkLimitForegroundRight
-    
-    pxor xmm0, xmm0
-    movss [foregroundScrolling], xmm0
+    CheckParallaxLimit midground, midgroundScrolling, .checkLimitForegroundRight, DIRECTION_RIGHT
 
 .checkLimitForegroundRight:
-    cvtsi2ss xmm0, [foreground + 4]
-    addss xmm0, xmm0
-    movss xmm1, [foregroundScrolling]
-    comiss xmm1, xmm0
-    jb .return
-    
-    pxor xmm0, xmm0
-    movss [foregroundScrolling], xmm0
+    CheckParallaxLimit foreground, foregroundScrolling, .return, DIRECTION_RIGHT
 
 .return:
     pop rbp

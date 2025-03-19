@@ -1,5 +1,6 @@
-; rdi = Player*
-; [rbp - 8], Player*
+; ============== PARAMETERS ==============
+; [rbp - 8]     =  Player*
+
 _InitPlayer:
     push rbp
     mov rbp, rsp
@@ -9,7 +10,6 @@ _InitPlayer:
 
     mov edi, 56
     call malloc
-    ; Allocation memory for player.entity
     mov rdx, [rbp - 8]
     mov [rdx], rax
 
@@ -34,8 +34,10 @@ _InitPlayer:
     pop rbp
     ret
 
-; rdi = Camera*
-; rsi = Player*
+; ============== PARAMETERS ==============
+; rdi   = Camera*
+; rsi   = Player*
+
 _InitCamera:
     push rbp
     mov rbp, rsp
@@ -44,6 +46,7 @@ _InitCamera:
     call GetScreenWidth
     sar rax, 1
     cvtsi2ss xmm0, rax
+
     call GetScreenHeight
     sar rax, 1
     cvtsi2ss xmm1, rax
@@ -77,7 +80,7 @@ _InitCamera:
     pop rbp
     ret
 
-_InitBackground:
+_InitParallaxBackground:
     push rbp
     mov rbp, rsp
 

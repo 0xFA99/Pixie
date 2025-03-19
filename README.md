@@ -3,6 +3,8 @@
 Welcome to **Pixie**, a simple yet magical gmae written in **x64 assembly (FASM)** with the power of **Raylib**!
 This project is my journey into the mysterious realm of low-level programming, where every byte count and performance is king.
 
+![Demo](assets/demo.gif)
+
 ## Getting Started
 ### Requirements
 - Linux (x86_64)
@@ -32,7 +34,8 @@ $ make clean
 ### TO-DO
 - [x] Draw Sprite
 - [x] Add Camera2D
-- [X] Add Flip Sprite (Left and Right)
-- [ ] Add Sprite Animation
-- [ ] Add Movement
-- [ ] ...
+- [X] Add Flip Sprite
+- [X] Add Sprite Animation
+- [X] Add Movement
+- [X] Add Parallax Background
+- [ ] Soon (I have no idea)
