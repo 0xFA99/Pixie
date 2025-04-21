@@ -1,215 +1,151 @@
-; ============== PARAMETERS ==============
-; rdi = Camera*
-; rsi = Player*
+; rdi       = Camera*
+; rsi       = Player*
+_updateCamera:
+    mov r12, [rsi]
 
-_UpdateCamera:
-    push rbp
-    mov rbp, rsp
+    ; Get Player Position
+    mov rax, [rsi + 16]
 
-    movss xmm0, [rsi + 16]
+    ; Update camera target with player position
+    mov [rdi + 8], rax
 
-    mov rax, [rsi]
-    mov rax, [rax + 24]
-    movss xmm1, [rax + 8]
-
-    mov eax, 2.0
-    movd xmm2, eax
-
-    divss xmm1, xmm2
-    addss xmm0, xmm1
-    movss [rdi + 8], xmm0
-
-    call GetMouseWheelMove
-    movss xmm1, [cameraZoom]
-    mulss xmm1, xmm0
+    ; Get current camera zoom
     movss xmm0, [rdi + 20]
-    addss xmm0, xmm1
-    movss [rdi + 20], xmm0
 
-.cameraZoomMax:
-    mov eax, 3.0
-    movd xmm1, eax
-    movss xmm0, [rdi + 20]
+.checkMaxZoomLimit:
+    ; Check camera max zoom limit
+    movss xmm1, [cameraZoomMax]
     comiss xmm0, xmm1
-    jbe .cameraZoomMin
+    jbe .checkMinZoomLimit
 
+    ; If camera zoom more than max limit
+    ; set to max limit
     movss [rdi + 20], xmm1
-
-.cameraZoomMin:
-    mov eax, 0.1
-    movd xmm0, eax
-    movss xmm1, [rdi + 20]
-    comiss xmm0, xmm1
-    jb .return
-
-    movss [rdi + 20], xmm0
-
-.return:
-    pop rbp
-    ret
-
-_UpdatePlayer:
-    push rbp
-    mov rbp, rsp
-    sub rsp, 32
-
-    mov [rbp - 8], rdi
-    movd [rbp - 16], xmm0
-
-;   struct PlayerStatus status = player->status;
-    mov rax, [rbp - 8]
-    mov rdx, [rax + 40]
-    mov [rbp - 24], rdx
-
-;   struct AnimationState *animation = player->animation;
-    mov rax, [rbp - 8]
-    mov rdx, [rax + 8]
-    mov [rbp - 32], rdx
-
-;   if (status.state != animation->state || status.direction != animation->direction)
-;       SetPlayerAnimation(player, status.state, status.direction);
-    mov edx, [rbp - 24]
-    mov rax, [rbp - 32]
-    mov eax, [rax + 12]
-    cmp edx, eax                ; status.state != animation->state
-    jne .setPlayerAnimation
-
-    mov edx, [rbp - 20]
-    mov rax, [rbp - 32]
-    mov eax, [rax + 16]
-    cmp edx, eax
-    je .updatePlayerAnimation
-
-.setPlayerAnimation:
-    mov rdi, [rbp - 8]
-    mov esi, [rbp - 24]
-    mov edx, [rbp - 20]
-    call _SetPlayerAnimation
-
-.updatePlayerAnimation:
-    mov rax, [rbp - 8]          ; player*
-
-;   player->movement.position.x + player->movement.velocity.x * frameTime
-    movss xmm1, [rax + 16]      ; player->movement.position.x
-    movss xmm0, [rax + 24]      ; player->movement.velocity.x
-    mulss xmm0, [rbp - 16]      ; frameTime
-    addss xmm1, xmm0
-
-;   player->movement.position.y + player->movement.velocity.y * frameTime
-    movss xmm2, [rax + 20]      ; player.movement.position.y 
-    movss xmm0, [rax + 28]      ; player.movement.velocity.y
-    mulss xmm0, [rbp - 16]      ; frameTime
-    addss xmm0, xmm2
-
-    movss [rax + 16], xmm1
-    movss [rax + 20], xmm0
-
-;   float *frameDuration = &player->entity->frameDuration;
-    mov rax, [rax]
-    add rax, 52
-    mov [rbp - 24], rax
-
-;   float playerAnimFPS = player->animation->animationSequence.frameRate;
-    mov rax, [rbp - 8]
-    mov rax, [rax + 8]
-    movss xmm0, [rax + 8]
-    movss [rbp - 28], xmm0
-
-;   *frameDuration += frameTime;
-    mov rax, [rbp - 24]
-    movss xmm0, [rax]
-    addss xmm0, [rbp - 16]
-    movss [rax], xmm0
-
-    mov eax, 1.0
-    movd xmm0, eax
-    movss [rbp - 32], xmm0
-
-;   if (*frameDuration >= 1.0f / playerAnimFPS) {
-    mov rax, [rbp - 24]
-    movss xmm0, [rax]
-
-    movss xmm1, [rbp - 32]
-    divss xmm1, [rbp - 28]
-    comiss xmm0, xmm1
-    jnb .loopAnimation
-
     jmp .return
 
-.loopAnimation:
-;   *frameDuration = 0.0f;
-    pxor xmm0, xmm0
-    mov rax, [rbp - 24]
-    movss [rax], xmm0
+.checkMinZoomLimit:
+    ; Check camera min zoom limit
+    movss xmm1, [cameraZoomMin]
+    comiss xmm0, xmm1
+    jae .return
 
-;   player->currentFrame++;
-    mov rax, [rbp - 8]
-    mov edx, [rax + 48]
-    add edx, 1
-    mov [rax + 48], edx
-
-;   if (player->currentFrame > player->animation->animationSequence.endFrame) {
-    mov edx, [rax + 48]
-    mov rax, [rax + 8]
-    mov eax, [rax + 4]
-    cmp edx, eax
-    jle .return
-
-;   player->currentFrame = player->animation->animationSequence.startFrame;
-    mov rax, [rbp - 8]
-    mov rax, [rax + 8]
-    mov edx, [rax]
-    mov rax, [rbp - 8]
-    mov [rax + 48], edx
+    ; If camera zoom less than min limit
+    ; set to min limit
+    movss [rdi + 20], xmm1
 
 .return:
-    add rsp, 32
-    pop rbp
     ret
 
-_UpdateParallax:
-    push rbp
-    mov rbp, rsp
+; @params
+; rdi       = Player*
+; xmm0      = frameTime
 
-.checkKeyRight:
-    mov edi, 262
-    call IsKeyDown
-    test al, al
-    je .checkKeyLeft
+public _updatePlayer.debug
+_updatePlayer:
+    ; Because r12 - r14 used in setAnimationState
+    ; Save player address to r15 for safety
+    mov r15, rdi
 
-    ScrollingParallax backgroundScrolling, -0.5
-    ScrollingParallax midgroundScrolling, -1.0
-    ScrollingParallax foregroundScrolling, -2.0
+    ; Save player->entity
+    mov rdx, [r15]
 
-.checkKeyLeft:
-    mov edi, 263
-    call IsKeyDown
-    test al, al
-    je .checkBackgroundLimitLeft
+    ; Save player->animation
+    mov rsi, [r15 + 8]
 
-    ScrollingParallax backgroundScrolling, 0.5
-    ScrollingParallax midgroundScrolling, 1.0
-    ScrollingParallax foregroundScrolling, 2.0
+    ; Set player animation based of state and direction
+    mov eax, [rsi + 12]     ; AnimationState->state
+    mov ecx, [rsi + 16]     ; AnimationState->direction
 
-.checkBackgroundLimitLeft:
-    CheckParallaxLimit background, backgroundScrolling, .checkLimitMidgroundLeft, DIRECTION_LEFT
+    cmp eax, [r15 + 40]     ; Compare state
+    jne .continue
 
-.checkLimitMidgroundLeft:
-    CheckParallaxLimit midground, midgroundScrolling, .checkLimitForegroundLeft, DIRECTION_LEFT
+    mov ecx, [r15 + 44]     ; Compare direction
+    je .continue
 
-.checkLimitForegroundLeft:
-    CheckParallaxLimit foreground, foregroundScrolling, .checkLimitBackgroundRight, DIRECTION_LEFT
+    ; Set Player AnimationState
+    setAnimationState r15, [r15 + 40], [r15 + 44]
 
-.checkLimitBackgroundRight:
-    CheckParallaxLimit background, backgroundScrolling, .checkLimitMidgroundRight, DIRECTION_RIGHT
+    ; Save back player animation to rsi
+    mov rsi, [r15 + 8]
 
-.checkLimitMidgroundRight:
-    CheckParallaxLimit midground, midgroundScrolling, .checkLimitForegroundRight, DIRECTION_RIGHT
+    ; Save back player entity to rdx
+    mov rdx, [r15]
 
-.checkLimitForegroundRight:
-    CheckParallaxLimit foreground, foregroundScrolling, .return, DIRECTION_RIGHT
+.continue:
+    ; Update player position x
+    movss xmm1, [r15 + 16]  ; position.x
+    movss xmm2, [r15 + 24]  ; velocity.x
+    mulss xmm2, xmm0        ; frameTime
+    addss xmm1, xmm2
+
+    ; Save back to player position x
+    movss [r15 + 16], xmm1
+
+    ; Update player position y
+    movss xmm1, [r15 + 20]  ; position.y
+    movss xmm2, [r15 + 28]  ; velocity.y
+    mulss xmm2, xmm0        ; frameTime
+    addss xmm1, xmm2
+
+    ; Save back to player position y
+    movss [r15 + 20], xmm1
+
+    ; Get value of entity.frameDuration
+    movss xmm1, [rdx + 44]
+
+    ; Sum frameDuration with frameTime
+    addss xmm1, xmm0
+    movss [rdx + 44], xmm1
+
+    ; Get value of animation.frameRate
+    movss xmm2, [rsi + 8]
+
+    ; Compare frameDuration with FPS
+    ; FPS (1.0 / frameRate)
+    mov eax, 1.0
+    movd xmm3, eax
+
+    divss xmm3, xmm2
+    comiss xmm1, xmm3
+    jb .return 
+
+    ; Reset frameDuration
+    pxor xmm1, xmm1
+    movd [rdx + 44], xmm1
+
+    ; Update currentFrame to next frame
+    add dword [r15 + 48], 1
+
+    ; Compare if currentFrame is lastFrame
+    mov eax, [r15 + 48]
+    cmp eax, [rsi + 4]
+    jle .return
+
+    ; Set currentFrame to startFrame
+    mov eax, [rsi]
+    mov [r15 + 48], eax
 
 .return:
-    pop rbp
+    ; Save frameTime to xmm3
+    ; movss xmm3, xmm0
+
+    ; Get Player velocity
+    ; movsd xmm0, [r15 + 24]
+    ; movss xmm1, xmm3
+    ; call Vector2Scale
+
+    ; Get Player positions
+    ; movsd xmm1, [r12 + 16]
+    ; call Vector2Add
+
+    ; Save new Position into xmm2
+    ; movq xmm2, xmm0
+
+    ; TODO: Check Gravity and ground
+
+    ; Store new position to Player
+.debug:
+    ; movq [r12 + 16], xmm2
+
     ret
 

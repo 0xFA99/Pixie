@@ -1,123 +1,173 @@
-; ============== PARAMETERS ==============
-; rdi   = Player*
-
-_RenderPlayer:
+_renderPlayer:
     push rbp
     mov rbp, rsp
-    sub rsp, 80
 
-    mov [rbp - 8], rdi
+    mov r12, rdi        ; Player*
+    mov r13, [rdi]      ; Player->entity
 
-    ; Texture 20 bytes
-    mov rax, [rbp - 8]
-    mov rax, [rax]
+    ; Setup the texture
+    sub rsp, 32         ; 20 bytes tuxture + 12 padding
+    mov rax, [r13]
+    mov rdx, [r13 + 8]
+    mov [rsp], rax
+    mov [rsp + 8], rdx
+    mov rax, [r13 + 16]
+    mov [rsp + 16], rax
 
-    mov rdx, [rax]
-    mov rcx, [rax + 8]
-    mov [rbp - 28], rdx
-    mov [rbp - 20], rcx
-    mov eax, [rax + 16]
-    mov [rbp - 12], eax
-
-    ; Frame 16 bytes
-    mov rax, [rbp - 8]
-    mov rax, [rax]
-    mov rdx, [rax + 24]
-
-    mov rax, [rbp - 8]
-    mov eax, [rax + 48]
+    ; Get reference of current frames
+    mov rdi, [r13 + 20]
+    mov eax, [r12 + 48] ; player current frame
     imul eax, 16
     cdqe
-    add rax, rdx
+    add rdi, rax
 
-    movsd xmm0, [rax]
-    movsd xmm1, [rax + 8]
-    movsd [rbp - 44], xmm0
-    movsd [rbp - 36], xmm1
+    ; Get the frame rectangle
+    movq xmm0, [rdi]
+    movq xmm1, [rdi + 8]
 
-    ; Position 16 bytes
-    mov rax, [rbp - 8]
-    movsd xmm0, [rax + 16]
-    movsd [rbp - 60], xmm0
+    ; Get Player coordinate
+    movsd xmm2, [r12 + 16]      ; Player.position
+    movsd xmm3, [rdi + 8]       ; texture.width
+    subps xmm2, xmm3            ; position - width
 
-    movss xmm0, [rbp - 32]
-    movss [rbp - 48], xmm0
+    ; Get size of frame
+    movq xmm3, [rdi + 8]
+   
+    ; Check if frame width is negative
+    pxor xmm4, xmm4
+    comiss xmm2, xmm4
+    jnb .skipFlip
 
-    ; Check if position.width is negative
-    ; convert to positive
-    movss xmm0, [rbp - 36]
-    mov eax, -0.0
-    movd xmm2, eax
-    pxor xmm1, xmm1
-    comiss xmm1, xmm0
-    jbe .positive
+    ; Change to positive
+    pxor xmm2, xmm4
 
-    xorps xmm0, xmm2
+.skipFlip:
+    ; Set offset
+    pxor xmm4, xmm4
 
-.positive:
-    movss [rbp - 52], xmm0
-
-    movss xmm0, [rbp - 52]
-    movss [rbp - 52], xmm0
-
-    ; Vector 8 bytes
-    pxor xmm0, xmm0
-    movsd [rbp - 68], xmm0
-
-    sub rsp, 16
-    mov rcx, rsp
-
-    ; texture
-    mov rax, [rbp - 28]
-    mov rdx, [rbp - 20]
-    mov [rcx], rax
-    mov [rcx + 8], rdx
-    mov eax, [rbp - 12]
-    mov [rcx + 16], eax
-
-    ; frame
-    movsd xmm0, [rbp - 44]
-    movsd xmm1, [rbp - 36]
-
-    ; position
-    movsd xmm2, [rbp - 60]
-    movsd xmm3, [rbp - 52]
-
-    ; offset
-    movsd xmm4, [rbp - 68]
-
-    ; rotation
+    ; Rotation
     pxor xmm5, xmm5
-
-    ; Color = 0xFFFFFFFF
+   
+    ; Color
     mov edi, -1
 
-    call DrawTexturePro
+    call _drawTexturePro
+    add rsp, 32
 
-    add rsp, 16
-
-    add rsp, 80
     pop rbp
     ret
 
-_RenderParallax:
+; @ params
+; rdi = Parallax*
+_renderParallax:
     push rbp
     mov rbp, rsp
-    sub rsp, 16
 
-    DrawParallaxLayer background, backgroundScrolling, 0.0, 2.0, BACK
-    DrawParallaxLayer background, backgroundScrolling, 0.0, 2.0, MIDDLE
-    DrawParallaxLayer background, backgroundScrolling, 0.0, 2.0, FRONT
+    ; Save parallax address to r12
+    mov r12, rdi
 
-    DrawParallaxLayer midground, midgroundScrolling, 20.0, 2.0, BACK
-    DrawParallaxLayer midground, midgroundScrolling, 20.0, 2.0, MIDDLE
-    DrawParallaxLayer midground, midgroundScrolling, 20.0, 2.0, FRONT
+    ; Get parallax.count
+    mov r13d, [r12 + 8]
 
-    DrawParallaxLayer foreground, foregroundScrolling, 70.0, 2.0, BACK
-    DrawParallaxLayer foreground, foregroundScrolling, 70.0, 2.0, MIDDLE
-    DrawParallaxLayer foreground, foregroundScrolling, 70.0, 2.0, FRONT
+    ; Index loop 1
+    mov r14d, 0
+    jmp .L1
 
-    add rsp, 16
+.L4:
+    ; Index loop 2
+    mov r15d, 0
+    jmp .L2
+
+.L3:
+    inc r15d
+
+.L2:
+    ; Get reference of parallax.data[count]
+    mov rdi, [r12]
+    mov eax, r14d
+    imul eax, 32
+    cdqe
+    add rdi, rax
+
+    ; Get Parallax.texture.width
+    cvtsi2ss xmm0, [rdi + 4]
+
+    cmp r15d, 0
+    je .setupBackParallax
+
+    cmp r15d, 1
+    je .setupMidParallax
+
+    cmp r15d, 2
+    je .setupFrontParallax
+
+.setupBackParallax:
+    ; Set the position in the back
+    ; of original parallax position
+    addss xmm0, xmm0
+
+    ; Make it negative
+    mov eax, -0.0
+    movd xmm1, eax
+    xorps xmm0, xmm1
+
+    ; Sum the result with parallax position
+    movss xmm1, [rdi + 20]
+    addss xmm0, xmm1
+
+    jmp .drawParallax
+
+.setupMidParallax:
+    movss xmm0, [rdi + 20]
+    jmp .drawParallax
+
+.setupFrontParallax:
+    ; Set the position in the front
+    ; of original parallax position
+    addss xmm0, xmm0
+
+    ; Sum the result with parallax position
+    movss xmm1, [rdi + 20]
+    addss xmm0, xmm1
+
+.drawParallax:
+    ; Texture
+    sub rsp, 32     ; 20 bytes + 12 bytes padding
+    mov rax, [rdi]
+    mov rdx, [rdi + 8]
+    mov [rsp], rax
+    mov [rsp + 8], rdx
+    mov eax, [rdi + 16]
+    mov [rsp + 16], eax
+
+    ; Position
+    cvtsi2ss xmm1, [rdi + 24]
+    unpcklps xmm0, xmm1
+
+    ; Rotation
+    pxor xmm1, xmm1
+
+    ; Scale
+    mov eax, 2.0
+    movd xmm2, eax
+
+    ; Color
+    mov edi, -1
+
+    call _drawTextureEx
+    add rsp, 32
+
+    ; Compare index with 3
+    ; (back, mid, fore)
+    cmp r15d, 3
+    jl .L3
+
+    inc r14d
+
+.L1:
+    cmp r14d, r13d
+    jl .L4
+
     pop rbp
     ret
 
