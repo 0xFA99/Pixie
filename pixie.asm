@@ -5,6 +5,7 @@ include 'struct.inc'
 include 'macros.inc'
 
 section '.text' executable
+
 public _start
 
 include 'init.asm'
@@ -16,69 +17,69 @@ include 'render.asm'
 include 'cleanup.asm'
 
 _start:
-    ; Init Window
-    mov edi, 800    ; Width
-    mov esi, 450    ; Height
-    mov edx, title
+    ; Initialize Game Window
+    mov edi, 800                    ; Window width
+    mov esi, 450                    ; Window height
+    mov edx, title                  ; Window title
     call _initWindow
 
-    ; Init Camera
+    ; Initialize Camera
     callWith camera, _initCamera
 
-    ; Init Player
+    ; Initialize Player Object
     callWith player, _initPlayer
 
-    ; Load SpriteSheet for player
-    mov rdi, [player]
+    ; Load Player Sprite Sheet
+    mov rdi, [player]               ; Player entity pointer
     mov rsi, player_file_texture
-    mov edx, 17     ; rows
-    mov ecx, 6      ; columns
+    mov edx, 17                     ; Number of rows
+    mov ecx, 6                      ; Number of columns
     call _loadSpriteEntity
 
-    ; Add flip texture for player
+    ; Add Flipped Texture ( for left-facing sprites )
     callWith [player], _addFlipTexture
 
-    ; Add AnimationState for player
-    ; @params: object, state, direction, start, end, speed
-    ; Animation State (Idle)
+    ; Define Player Animation States
+    ; @params: entity, state, direction, startFrame, endFrame, speed
+
+    ; Idle Animation
     addAnimationState [player], STATE_IDLE, DIRECTION_RIGHT, 0, 5, 10.0
     addAnimationState [player], STATE_IDLE, DIRECTION_LEFT, 102, 107, 10.0
 
-    ; Animation State (Run)
+    ; Run Animation
     addAnimationState [player], STATE_RUN, DIRECTION_RIGHT, 6, 13, 10.0
     addAnimationState [player], STATE_RUN, DIRECTION_LEFT, 108, 115, 10.0
 
-    ; Animation State (Jump)
+    ; Jump Animation
     addAnimationState [player], STATE_JUMP, DIRECTION_RIGHT, 41, 43, 10.0
     addAnimationState [player], STATE_JUMP, DIRECTION_LEFT, 143, 145, 10.0
 
-    ; Animation State (Fall)
+    ; Fall Animation
     addAnimationState [player], STATE_FALL, DIRECTION_RIGHT, 46, 48, 10.0
     addAnimationState [player], STATE_FALL, DIRECTION_LEFT, 148, 150, 10.0
 
-    ; Set Player animation
-    setAnimationState player, STATE_IDLE, DIRECTION_RIGHT
+    ; Set Initial Animation State (Idle Right)
+    setAnimationState player, STATE_IDLE, DIRECTION_LEFT
 
-    ; Init Parallax
-    ; @params: parallax*, file*, posX, posY, speed
+    ; Setup Parallax Layers
+    ; @params: parallax*, file*, x, y, scroll_speed
     addParallax parallax, parallax_layer1, 0,   0,    0.1
     addParallax parallax, parallax_layer2, 0,   25,   0.5
     addParallax parallax, parallax_layer3, 0,   65,   1.0
 
-    ; Set 30 as target FPS
-    callWith 30, _setTargetFPS
+    ; Set Frame Rate (60 FPS)
+    callWith 60, _setTargetFPS
 
 .gameLoop:
-    ; Check if window closed
+    ; Check if window should close
     call _windowShouldClose
     test al, al
     jnz .gameEnd
 
-    ; Get frame time
+    ; Get Frame Time (delta time)
     call _getFrameTime
     movd [frameTime], xmm0
 
-    ; Input Event
     ; Handle Input Camera
     callWith camera, _inputCamera
 
@@ -88,29 +89,23 @@ _start:
     movd xmm1, [gravity]
     call _inputPlayer
 
-    ; DEBUG
-    lea rdi, [debug_str]
-    mov esi, [player + 40]
-    call printf
-
-    ; Update Player
-    mov rdi, player
-    movd xmm0, [frameTime]
-    call _updatePlayer
-
-    ; Update Event
-    ; callWith camera, _updateCamera
+    ; Update Camera Logic
     mov rdi, camera
     mov rsi, player
     call _updateCamera
 
-    ; Setup framebuffer
+    ; Update Player Logic
+    mov rdi, player
+    movd xmm0, [frameTime]
+    call _updatePlayer
+
+    ; Begin Frame Rendering
     call _beginDrawing
 
     ; Set background color
     callWith 0xFF181818, _clearBackground
 
-    ; Enter 2D Mode
+    ; Enter 2D Drawing Mode (with camera transform)
     ; 24 bytes Camera + 8 Padding
     sub rsp, 32
     movq xmm0, [camera]
@@ -130,10 +125,10 @@ _start:
     ; Render Player
     callWith player, _renderPlayer
 
-    ; End 2D Mode
+    ; End 2D Drawing Mode
     call _endMode2D
 
-    ; End framebuffer
+    ; Finish Drawing Frame
     call _endDrawing
 
     jmp .gameLoop
@@ -141,13 +136,13 @@ _start:
 .gameEnd:
     call _closeWindow
 
-    ; Cleanup memory ( Good Habit :D )
+    ; Clean up allocated resources( Good Habit :D )
     callWith player, _freePlayer
     callWith parallax, _freeParallax
 
-    ; Call exit syscall
-    mov eax, 60
-    xor edi, edi
+    ; Exit Program
+    mov eax, 60             ; syscall: exit
+    xor edi, edi            ; status code: 0
     syscall
 
 section '.data' writeable
@@ -162,16 +157,14 @@ parallax            Parallax
 section '.rodata'
 title               db "Pixie", 0x0
 
-cameraZoomLevel     dd 0.05
-cameraZoomMin       dd 0.5
-cameraZoomMax       dd 3.0
-
 player_file_texture db "assets/character/warrior.png", 0x0
 parallax_layer1     db "assets/background/cyberpunk_street_background.png", 0x0
 parallax_layer2     db "assets/background/cyberpunk_street_midground.png", 0x0
 parallax_layer3     db "assets/background/cyberpunk_street_foreground.png", 0x0
 
-debug_str           db "State: %d", 0xa, 0x0
+cameraZoomLevel     dd 0.05
+cameraZoomMin       dd 0.5
+cameraZoomMax       dd 3.0
 
 section '.note.GNU-stack'
 

@@ -4,10 +4,19 @@ _updateCamera:
     mov r12, [rsi]
 
     ; Get Player Position
-    mov rax, [rsi + 16]
+    movsd xmm0, [rsi + 16]
+
+    mov rsi, [rsi]
+    mov rsi, [rsi + 20]
+    movss xmm1, [rsi + 8]
+    mov eax, 0.5
+    movd xmm2, eax
+    mulss xmm1, xmm2
+
+    addss xmm0, xmm1
 
     ; Update camera target with player position
-    mov [rdi + 8], rax
+    movsd [rdi + 8], xmm0
 
     ; Get current camera zoom
     movss xmm0, [rdi + 20]
@@ -40,7 +49,6 @@ _updateCamera:
 ; rdi       = Player*
 ; xmm0      = frameTime
 
-public _updatePlayer.debug
 _updatePlayer:
     ; Because r12 - r14 used in setAnimationState
     ; Save player address to r15 for safety
@@ -57,7 +65,7 @@ _updatePlayer:
     mov ecx, [rsi + 16]     ; AnimationState->direction
 
     cmp eax, [r15 + 40]     ; Compare state
-    jne .continue
+    je .continue
 
     mov ecx, [r15 + 44]     ; Compare direction
     je .continue
@@ -127,16 +135,16 @@ _updatePlayer:
 
 .return:
     ; Save frameTime to xmm3
-    ; movss xmm3, xmm0
+    movss xmm3, xmm0
 
     ; Get Player velocity
-    ; movsd xmm0, [r15 + 24]
-    ; movss xmm1, xmm3
-    ; call Vector2Scale
+    movsd xmm0, [r15 + 24]
+    movss xmm1, xmm3
+    call Vector2Scale
 
     ; Get Player positions
-    ; movsd xmm1, [r12 + 16]
-    ; call Vector2Add
+    movsd xmm1, [r12 + 16]
+    call Vector2Add
 
     ; Save new Position into xmm2
     ; movq xmm2, xmm0
@@ -144,8 +152,9 @@ _updatePlayer:
     ; TODO: Check Gravity and ground
 
     ; Store new position to Player
-.debug:
+
     ; movq [r12 + 16], xmm2
+    movq [r12 + 16], xmm0
 
     ret
 

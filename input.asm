@@ -33,6 +33,8 @@ public _inputPlayer
 _inputPlayer:
     mov r12, rdi        ; Player
 
+    mov r13d, 0
+
     ; mov edi, 265        ; KEY_UP
     ; call _isKeyDown
     ; mov r14b, al
@@ -51,6 +53,8 @@ _inputPlayer:
 
     ; Set Direction Right
     mov r13d, DIRECTION_RIGHT
+
+    jmp .compareState
 
 .checkKeyLeft:
     mov edi, 263        ; KEY_LEFT
@@ -96,23 +100,25 @@ _inputPlayer:
     mov dword [r12 + 40], STATE_RUN
 
     ; Set direction
-    ; cmp r13d, 0
-    ; setg al
-    ; movzx edx, al
-    ; mov [r12 + 44], edx
+    cmp r13d, 0
+    setg al
+    movzx edx, al
+    shl edx, 1
+    sub edx, 1
+    mov [r12 + 44], edx
 
     ; Update Velocity ( direction * speed )
-    ; movss xmm0, [r12 + 36]      ; Player.speed
-    ; cvtsi2ss xmm1, r13d         ; Direction
-    ; mulss xmm0, xmm1
-    ; movd [r12 + 24], xmm0       ; Player.velocity.x
+    movss xmm0, [r12 + 36]      ; Player.speed
+    cvtsi2ss xmm1, r13d         ; Direction
+    mulss xmm0, xmm1
+    movd [r12 + 24], xmm0       ; Player.velocity.x
 
     jmp .return
 
 .stayIdle:
     ; Set player velocity to 0
-    ; pxor xmm0, xmm0
-    ; movq [r12 + 24], xmm0
+    pxor xmm0, xmm0
+    movq [r12 + 24], xmm0
 
     jmp .return
 
@@ -126,27 +132,25 @@ _inputPlayer:
     mov dword [r12 + 40], STATE_IDLE
 
     ; Set velocity to 0
-    ; mov dword [r12 + 24], 0.0
+    mov dword [r12 + 24], 0.0
 
     jmp .return
 
 .stayRun:
     ; Set Player Direction
-    ; cmp r13d, 0
-    ; setg al
-    ; movzx edx, al
-    ; mov [r12 + 44], edx
+    cmp r13d, 0
+    setg al
+    movzx edx, al
+    shl edx, 1
+    sub edx, 1
+    mov [r12 + 44], edx
 
     ; Update Velocity ( direction * speed )
-    ; movss xmm0, [r12 + 36]      ; Player.speed
-    ; cvtsi2ss xmm1, r13d         ; Direction
-    ; mulss xmm0, xmm1
-    ; movd [r12 + 24], xmm0       ; Player.velocity.x
+    movss xmm0, [r12 + 36]      ; Player.speed
+    cvtsi2ss xmm1, r13d         ; Direction
+    mulss xmm0, xmm1
+    movd [r12 + 24], xmm0       ; Player.velocity.x
 
 .return:
-    ; mov rdi, debug_str
-    ; mov esi, [r12 + 40]
-    ; call printf
-
     ret
 

@@ -1,3 +1,5 @@
+public _renderPlayer.debug
+
 _renderPlayer:
     push rbp
     mov rbp, rsp
@@ -21,25 +23,24 @@ _renderPlayer:
     cdqe
     add rdi, rax
 
+.debug:
     ; Get the frame rectangle
     movq xmm0, [rdi]
     movq xmm1, [rdi + 8]
 
     ; Get Player coordinate
     movsd xmm2, [r12 + 16]      ; Player.position
-    movsd xmm3, [rdi + 8]       ; texture.width
-    subps xmm2, xmm3            ; position - width
-
-    ; Get size of frame
-    movq xmm3, [rdi + 8]
+    movsd xmm3, xmm1            ; texture.width
    
     ; Check if frame width is negative
-    pxor xmm4, xmm4
-    comiss xmm2, xmm4
+    mov eax, -0.0
+    ; pxor xmm4, xmm4
+    movd xmm4, eax
+    comiss xmm3, xmm4
     jnb .skipFlip
 
     ; Change to positive
-    pxor xmm2, xmm4
+    pxor xmm3, xmm4
 
 .skipFlip:
     ; Set offset
