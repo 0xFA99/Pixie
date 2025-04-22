@@ -49,25 +49,63 @@ _updateCamera:
 ; rdi       = Player*
 ; xmm0      = frameTime
 
+public _updatePlayer
+public _updatePlayer.setTemporaryPosition
+
 _updatePlayer:
     ; Because r12 - r14 used in setAnimationState
     ; Save player address to r15 for safety
     mov r15, rdi
 
     ; ==========================================
+    ; Save frameTime into xmm3
     movss xmm3, xmm0
 
+    ; Scale velocity and frameTime
     movss xmm1, xmm3
     movsd xmm0, [r15 + 24]
     call Vector2Scale
 
+    ; Add Scale result with player position
     movsd xmm1, [r15 + 16]
     call Vector2Add
 
+    ; Swap position x and y
     pshufd xmm0, xmm0, 11100001b
-    pxor xmm1, xmm1
+
+    ; Compare with position y > 0.0
+    ; pxor xmm1, xmm1
+    ; comiss xmm0, xmm1
+    ; jb .setTemporaryPosition
+
+    mov eax, 300.0
+    movd xmm1, eax
     comiss xmm0, xmm1
-    jb .set 
+    jb .setTemporaryPosition
+
+    ; Reset new position y to 300.0
+    movss xmm0, xmm1
+
+    ; Reset Player velocity y to 0.0
+    movd [r15 + 28], xmm1
+
+    ; Check if player.state is STATE_FALL or STATE_JUMP
+    mov dword [r15 + 40], STATE_FALL
+    jne .setTemporaryPosition
+
+    mov dword [r15 + 40], STATE_JUMP
+    jne .setTemporaryPosition
+
+    ; Set state to STATE_IDLE
+    mov dword [r15 + 40], STATE_IDLE
+
+.setTemporaryPosition:
+    ; Swap back position x and y
+    pshufd xmm0, xmm0, 11100001b
+    movaps [r15 + 16], xmm0
+
+    ; Save back frameTime into xmm0
+    movss xmm0, xmm3
 
     ; ==========================================
 
@@ -132,7 +170,7 @@ _updatePlayer:
 
     divss xmm3, xmm2
     comiss xmm1, xmm3
-    jb .calculateNewPosition
+    jb .return
 
     ; Reset frameDuration
     pxor xmm1, xmm1
@@ -144,48 +182,12 @@ _updatePlayer:
     ; Compare if currentFrame is lastFrame
     mov eax, [r15 + 48]
     cmp eax, [rsi + 4]
-    jle .calculateNewPosition
+    jle .return
 
     ; Set currentFrame to startFrame
     mov eax, [rsi]
     mov [r15 + 48], eax
 
-.calculateNewPosition:
-    ; Get Player velocity
-    movss xmm1, xmm0
-    movsd xmm0, [r15 + 24]
-    call Vector2Scale
-
-    ; Get Player positions
-    movsd xmm1, [r12 + 16]
-    call Vector2Add
-
-    ; Check new position y if more than 0
-    pshufd xmm0, xmm0, 11100001b        ; Swap x and y
-    pxor xmm1, xmm1
-    comiss xmm0, xmm1
-    jbe .setPosition
-
-    ; Reset new position y to 0.0
-    movss xmm0, xmm1
-
-    ; Reset Player position y to 0.0
-    movd [r15 + 28], xmm1
-
-    ; Check if player.state is STATE_FALL or STATE_JUMP
-    mov dword [r15 + 40], STATE_FALL
-    jne .setPosition
-
-    mov dword [r15 + 40], STATE_JUMP
-    jne .setPosition
-
-    ; Set State to STATE_IDLE
-    mov dword [r15 + 40], STATE_IDLE
-
-.setPosition:
-    ; Update new position
-    pshufd xmm0, xmm0, 11100001b 
-    movq [r15 + 16], xmm0
-
+.return:
     ret
 

@@ -88,7 +88,7 @@ _inputPlayer:
     ; je .stateFall
 
     ; jmp .applyGravity
-    jmp .return
+    jmp .applyGravity
 
 .stateIdle:
 .idleToRun:
@@ -113,14 +113,14 @@ _inputPlayer:
     mulss xmm2, xmm3
     movd [r12 + 24], xmm2       ; Player.velocity.x
 
-    jmp .return
+    jmp .applyGravity
 
 .stayIdle:
     ; Set player velocity to 0
     pxor xmm2, xmm2
     movq [r12 + 24], xmm2
 
-    jmp .return
+    jmp .applyGravity
 
 .stateRun:
 .runToIdle:
@@ -134,7 +134,7 @@ _inputPlayer:
     ; Set velocity to 0
     mov dword [r12 + 24], 0.0
 
-    jmp .return
+    jmp .applyGravity
 
 .stayRun:
     ; Set Player Direction
@@ -152,10 +152,13 @@ _inputPlayer:
     movd [r12 + 24], xmm2       ; Player.velocity.x
 
 .applyGravity:
-    ; Gravity * FrameTime
+    ; frameTime * gravity
     mulss xmm0, xmm1
 
-    ; Store into player velocity y
+    ; Add with player velocity y
+    addss xmm0, [r12 + 28]
+
+    ; Store back into player velocity y
     movss [r12 + 28], xmm0
 
 .return:
