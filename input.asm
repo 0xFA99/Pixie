@@ -108,17 +108,17 @@ _inputPlayer:
     mov [r12 + 44], edx
 
     ; Update Velocity ( direction * speed )
-    movss xmm0, [r12 + 36]      ; Player.speed
-    cvtsi2ss xmm1, r13d         ; Direction
-    mulss xmm0, xmm1
-    movd [r12 + 24], xmm0       ; Player.velocity.x
+    movss xmm2, [r12 + 36]      ; Player.speed
+    cvtsi2ss xmm3, r13d         ; Direction
+    mulss xmm2, xmm3
+    movd [r12 + 24], xmm2       ; Player.velocity.x
 
     jmp .return
 
 .stayIdle:
     ; Set player velocity to 0
-    pxor xmm0, xmm0
-    movq [r12 + 24], xmm0
+    pxor xmm2, xmm2
+    movq [r12 + 24], xmm2
 
     jmp .return
 
@@ -146,10 +146,17 @@ _inputPlayer:
     mov [r12 + 44], edx
 
     ; Update Velocity ( direction * speed )
-    movss xmm0, [r12 + 36]      ; Player.speed
-    cvtsi2ss xmm1, r13d         ; Direction
+    movss xmm2, [r12 + 36]      ; Player.speed
+    cvtsi2ss xmm3, r13d         ; Direction
+    mulss xmm2, xmm3
+    movd [r12 + 24], xmm2       ; Player.velocity.x
+
+.applyGravity:
+    ; Gravity * FrameTime
     mulss xmm0, xmm1
-    movd [r12 + 24], xmm0       ; Player.velocity.x
+
+    ; Store into player velocity y
+    movss [r12 + 28], xmm0
 
 .return:
     ret

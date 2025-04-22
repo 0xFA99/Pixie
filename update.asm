@@ -54,6 +54,23 @@ _updatePlayer:
     ; Save player address to r15 for safety
     mov r15, rdi
 
+    ; ==========================================
+    movss xmm3, xmm0
+
+    movss xmm1, xmm3
+    movsd xmm0, [r15 + 24]
+    call Vector2Scale
+
+    movsd xmm1, [r15 + 16]
+    call Vector2Add
+
+    pshufd xmm0, xmm0, 11100001b
+    pxor xmm1, xmm1
+    comiss xmm0, xmm1
+    jb .set 
+
+    ; ==========================================
+
     ; Save player->entity
     mov rdx, [r15]
 
@@ -65,10 +82,10 @@ _updatePlayer:
     mov ecx, [rsi + 16]     ; AnimationState->direction
 
     cmp eax, [r15 + 40]     ; Compare state
-    je .continue
+    je .updatePosition
 
     mov ecx, [r15 + 44]     ; Compare direction
-    je .continue
+    je .updatePosition
 
     ; Set Player AnimationState
     setAnimationState r15, [r15 + 40], [r15 + 44]
@@ -79,7 +96,7 @@ _updatePlayer:
     ; Save back player entity to rdx
     mov rdx, [r15]
 
-.continue:
+.updatePosition:
     ; Update player position x
     movss xmm1, [r15 + 16]  ; position.x
     movss xmm2, [r15 + 24]  ; velocity.x
@@ -115,7 +132,7 @@ _updatePlayer:
 
     divss xmm3, xmm2
     comiss xmm1, xmm3
-    jb .return 
+    jb .calculateNewPosition
 
     ; Reset frameDuration
     pxor xmm1, xmm1
@@ -127,34 +144,48 @@ _updatePlayer:
     ; Compare if currentFrame is lastFrame
     mov eax, [r15 + 48]
     cmp eax, [rsi + 4]
-    jle .return
+    jle .calculateNewPosition
 
     ; Set currentFrame to startFrame
     mov eax, [rsi]
     mov [r15 + 48], eax
 
-.return:
-    ; Save frameTime to xmm3
-    movss xmm3, xmm0
-
+.calculateNewPosition:
     ; Get Player velocity
+    movss xmm1, xmm0
     movsd xmm0, [r15 + 24]
-    movss xmm1, xmm3
     call Vector2Scale
 
     ; Get Player positions
     movsd xmm1, [r12 + 16]
     call Vector2Add
 
-    ; Save new Position into xmm2
-    ; movq xmm2, xmm0
+    ; Check new position y if more than 0
+    pshufd xmm0, xmm0, 11100001b        ; Swap x and y
+    pxor xmm1, xmm1
+    comiss xmm0, xmm1
+    jbe .setPosition
 
-    ; TODO: Check Gravity and ground
+    ; Reset new position y to 0.0
+    movss xmm0, xmm1
 
-    ; Store new position to Player
+    ; Reset Player position y to 0.0
+    movd [r15 + 28], xmm1
 
-    ; movq [r12 + 16], xmm2
-    movq [r12 + 16], xmm0
+    ; Check if player.state is STATE_FALL or STATE_JUMP
+    mov dword [r15 + 40], STATE_FALL
+    jne .setPosition
+
+    mov dword [r15 + 40], STATE_JUMP
+    jne .setPosition
+
+    ; Set State to STATE_IDLE
+    mov dword [r15 + 40], STATE_IDLE
+
+.setPosition:
+    ; Update new position
+    pshufd xmm0, xmm0, 11100001b 
+    movq [r15 + 16], xmm0
 
     ret
 
