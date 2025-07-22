@@ -1,41 +1,60 @@
 # Pixie - A Tiny Adventure in Assembly!
 
-Welcome to **Pixie**, a simple yet magical gmae written in **x64 assembly (FASM)** with the power of **Raylib**!
-This project is my journey into the mysterious realm of low-level programming, where every byte count and performance is king.
+Welcome to **Pixie**, a simple yet magical gmae written in **x64 assembly (FASM)** using the raw pixel-shooting power of **Raylib** and the blood, sweat and tears of my remining neurons!
+
+This is not just a game. It's a cry for help.
+It's a rebellion against modern software bloat.
 
 ![Demo](assets/demo.gif)
 
 ## Getting Started
 ### Requirements
 - Linux (x86_64)
-- [FASM](https://flatassembler.net/) (Flat Assembler)
-- [Raylib](https://www.raylib.com/)
+- [FASM](https://flatassembler.net/) - because who needs sanity
+- [Raylib](https://www.raylib.com/) - one of the few C libs that didn't gaslight me (yet)
 - `ld` (GNU linker)
-- `make`
+- `make` - it builds things. Sometimes.
+- A strong will to live (optional, but recommended)
+
+---
+
 ### Build & Run
 Clone the repo:
 ```sh
 $ git clone https://github.com/0xFA99/Pixie.git
 $ cd Pixie
-```
-To build the project:
-```sh
 $ make
-```
-TO run the game:
-```sh
 $ ./Pixie
 ```
-
-To clean up build files:
+> **Warning:** running this may cause your CPU to feel disrespected and overachive out of fear.
+To clean up:
 ```sh
 $ make clean
 ```
-### TO-DO
+
+## Whats Cookin on `dev` branch???
+- Replacing all mallocs with `mmap`, because I have decided to become a **syscall hermit.**
+- Using SIMD to move 2 floats at once, just so I can save **0.00001% CPU**, but feel like a god for doing it.
+- Planning to write my own memory allocator because libc was giving me trust issues.
+- Considering porting the whole game to run in ring 0 for "maximum vibes"
+
+## TO-DO
 - [x] Draw Sprite
 - [x] Add Camera2D
 - [X] Add Flip Sprite
 - [X] Add Sprite Animation
 - [X] Add Movement
 - [X] Add Parallax Background
-- [ ] Soon (I have no idea)
+- [ ] Add mental health recovery mechanic
+- [ ] Add sound effects if I dont scream first
+- [ ] Port to brainfuck or Morse code (maybe)
+
+## Warning
+This project was written in FASM, with zero safety nets, training wheels or regrets.
+By running it, you agree that:
+- if anything breaks dont contact me - contact a shaman.
+- if your GPU starts chanting in Latin, thats a feature.
+- understanding this code may unlock ancient knowledge or possibly just migrains
+
+## Use freely, suffer responsibly.
+
