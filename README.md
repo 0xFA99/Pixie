@@ -13,9 +13,8 @@ It's a rebellion against modern software bloat.
 - [FASM](https://flatassembler.net/) - because who needs sanity
 - [Raylib](https://www.raylib.com/) - one of the few C libs that didn't gaslight me (yet)
 - `ld` (GNU linker)
-- `make` - it builds things. Sometimes.
-- A strong will to live (optional, but recommended)
-
+- `make` - cause I like to pretend things are automated
+- optional: a therapist (for debug trauma)
 ---
 
 ### Build & Run
@@ -33,10 +32,10 @@ $ make clean
 ```
 
 ## Whats Cookin on `dev` branch???
-- Replacing all mallocs with `mmap`, because I have decided to become a **syscall hermit.**
-- Using SIMD to move 2 floats at once, just so I can save **0.00001% CPU**, but feel like a god for doing it.
+- Using SIMD to move 2 floats at once, just so I can save **0.00001% CPU**, even if the framerate doesnt care.
 - Planning to write my own memory allocator because libc was giving me trust issues.
 - Considering porting the whole game to run in ring 0 for "maximum vibes"
+- Thinkin of refactoring the whole codebase, cause everythinkg looks like it was written by 3 diff personalities.
 
 ## TO-DO
 - [x] Draw Sprite
