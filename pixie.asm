@@ -2,9 +2,12 @@ format ELF64
 
 include 'macros.inc'
 include 'header.inc'
+include 'struct.inc'
 
 section '.text' executable
 public _start
+
+include 'sprite.asm'
 
 _start:
     ; Init Window
@@ -12,6 +15,15 @@ _start:
     mov esi, 450    ; Height
     mov edx, title
     call InitWindow
+
+    ; Player - Load SpriteSheet
+    mov rdi, player                 ; player->entity
+    mov rsi, player_texture         ; texture
+    mov edx, 17                     ; rows
+    mov ecx, 6                      ; columns
+    call _loadSpriteSheet
+
+    callWith player, _addFlipSheet
 
     ; Set 60 as target FPS
     callWith 60, SetTargetFPS
@@ -42,9 +54,12 @@ _start:
 section '.data' writeable
 
 section '.bss' writeable
+player          Player
 
 section '.rodata'
 title db "Pixie", 0x0
+
+addAsset player_texture, "character/warrior.png"
 
 section '.note.GNU-stack'
 

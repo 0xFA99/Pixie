@@ -4,3 +4,7 @@ macro callWith object, function
     call function
 }
 
+macro addAsset var, path
+{
+    var db "assets/", path, 0x0
+}
