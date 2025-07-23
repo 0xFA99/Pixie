@@ -7,7 +7,9 @@ include 'struct.inc'
 section '.text' executable
 public _start
 
+include 'init.asm'
 include 'sprite.asm'
+include 'render.asm'
 
 _start:
     ; Init Window
@@ -16,14 +18,16 @@ _start:
     mov edx, title
     call InitWindow
 
+    callWith player, _initPlayer
+
     ; Player - Load SpriteSheet
-    mov rdi, player                 ; player->entity
+    mov rdi, [player]               ; player->entity
     mov rsi, player_texture         ; texture
     mov edx, 17                     ; rows
     mov ecx, 6                      ; columns
     call _loadSpriteSheet
 
-    callWith player, _addFlipSheet
+    callWith [player], _addFlipSheet
 
     ; Set 60 as target FPS
     callWith 60, SetTargetFPS
@@ -38,6 +42,8 @@ _start:
     call BeginDrawing
 
     callWith 0xFF181818, ClearBackground
+
+    callWith player, _renderPlayer
 
     ; End framebuffer
     call EndDrawing

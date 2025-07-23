@@ -26,5 +26,6 @@ struc SpriteEntity
 struc Player
 {
     .entity                 dq 0        ;  8 |  0 | *SpriteEntity
+    .currentFrame           dd 0        ;  4 |  8
 }
 

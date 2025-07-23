@@ -107,8 +107,6 @@ _addFlipSheet:
     mov r14d, eax
 
     ; Realloc frames with new frameCount
-    mov eax, r14d                   ; new frameCount
-    imul eax, 16
     shl rax, 4
     mov rsi, rax
     mov rdi, [r12 + 20]             ; frames*
