@@ -1,3 +1,5 @@
+public _loadSpriteSheet
+
 _loadSpriteSheet:
     push rbp
     mov rbp, rsp
