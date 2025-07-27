@@ -2,7 +2,7 @@
 ; @param rsi: player
 _updateCamera:
 
-    movsd xmm0, [rsi + 8]
+    movsd xmm0, [rsi + 16]
     movsd [rdi + 8], xmm0
 
     movss xmm0, [rdi + 20]
@@ -24,3 +24,4 @@ _updateCamera:
 
 .return:
     ret
+

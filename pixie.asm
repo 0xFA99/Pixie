@@ -12,6 +12,7 @@ include 'sprite.asm'
 include 'input.asm'
 include 'update.asm'
 include 'render.asm'
+include 'animations.asm'
 
 _start:
     ; Init Window
@@ -33,6 +34,28 @@ _start:
 
     callWith [player], _addFlipSheet
 
+    ; Add AnimationState for player
+    ; @params: object, state, direction, start, end, speed
+
+    ; Animation State (Idle)
+    addAnimation [player], STATE_IDLE, DIRECTION_RIGHT, 0, 5, 10.0
+    addAnimation [player], STATE_IDLE, DIRECTION_LEFT, 102, 107, 10.0
+
+    ; Animation State (Run)
+    addAnimation [player], STATE_RUN, DIRECTION_RIGHT, 6, 13, 10.0
+    addAnimation [player], STATE_RUN, DIRECTION_LEFT, 108, 115, 10.0
+
+    ; Animation State (Jump)
+    addAnimation [player], STATE_JUMP, DIRECTION_RIGHT, 41, 43, 10.0
+    addAnimation [player], STATE_JUMP, DIRECTION_LEFT, 143, 145, 10.0
+
+    ; Animation State (Fall)
+    addAnimation [player], STATE_FALL, DIRECTION_RIGHT, 46, 48, 10.0
+    addAnimation [player], STATE_FALL, DIRECTION_LEFT, 148, 150, 10.0
+
+    ; Set Player animation
+    setAnimation player, STATE_FALL, DIRECTION_LEFT
+
     ; Set 60 as target FPS
     callWith 60, SetTargetFPS
 
@@ -41,6 +64,10 @@ _start:
     call WindowShouldClose
     test al, al
     jnz .gameEnd
+
+    ; get delta time
+    call GetFrameTime
+    movss [deltaTime], xmm0
 
     callWith camera, _inputCamera
 
@@ -52,9 +79,11 @@ _start:
 
     callWith 0xFF181818, ClearBackground
 
-    sub rsp, 32
-    movups xmm0, [camera]
-    movups xmm1, [camera + 16]
+    ; TODO)) no align, no shame
+    ; if movaps kills me, at least it will be quick.
+    sub rsp, 32                     ; 24 + 8 padding
+    movups xmm0, [camera]           ; { offset(x, y), target(x, y)}
+    movups xmm1, [camera + 16]      ; { rotation, zoom, trash, trash }
     movups [rsp], xmm0
     movups [rsp + 16], xmm1
     mov rdi, rsp
@@ -78,14 +107,14 @@ _start:
     syscall
 
 section '.data' writeable
-gravity         dd 500.0
+deltaTime       dd 0.0
 
 section '.bss' writeable
 camera          Camera
 player          Player
 
 section '.rodata'
-title db "Pixie", 0x0
+title           db "Pixie", 0x0
 
 cameraZoomLevel dd 0.05
 cameraZoomMin   dd 0.5

@@ -1,5 +1,3 @@
-public _renderPlayer
-
 _renderPlayer:
     push rbp
     mov rbp, rsp
@@ -9,17 +7,17 @@ _renderPlayer:
 
     ; @param 1 - Texture - DrawTexturePro
     ; Setup texture
-    sub rsp, 32                     ; 20 bytes texture + 12 bytes padding
+    sub rsp, 32                     ; 24 bytes texture + 8 bytes padding
     movaps xmm0, [r13]              ; texture { id, width, height, mipmaps }
     movaps [rsp], xmm0
     mov eax, [r13 + 16]             ; texture.format
     mov [rsp + 16], eax
 
     ; player.frames[player.currentFrame]
-    mov rdi, [r13 + 20]             ; player.frames*
-    mov eax, [r12 + 16]             ; player.currentFrame
-    sal rax, 4
-    add rdi, rax
+    mov rdi, [r13 + 24]             ; player.frames*
+    mov eax, [r12 + 56]             ; player.currentFrame
+    sal rax, 4                      ; sizeof rectangle (16)
+    add rdi, rax                    ; base + currentFrame
 
     ; @param 2 - Source Rectangle - DrawTexturePro
     ; get data of current frame
@@ -30,14 +28,15 @@ _renderPlayer:
     movsd xmm2, [r12 + 8]
     movsd xmm3, xmm1
 
-    ; Offset
+    ; @param 4 - Offset
     pxor xmm4, xmm4
 
-    ; Rotation
+    ; @param 5 - Rotation
     pxor xmm5, xmm5
 
-    ; Color 
-    mov edi, -1
+    ; @param 6 - Color
+    mov edi, -1                     ; 0xFFFFFF (white)
+
     call DrawTexturePro
     add rsp, 32
 

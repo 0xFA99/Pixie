@@ -10,3 +10,4 @@ _inputCamera:
     movd [rdi + 20], xmm0
 
     ret
+

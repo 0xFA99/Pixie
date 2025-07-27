@@ -2,21 +2,25 @@
 _initPlayer:
     mov r12, rdi
 
-    mov edi, 48
+    mov edi, 56                     ; sizeof SpriteEntity
     call malloc
     mov [r12], rax                  ; player->entity
 
-    xor rax, rax
-    mov [r12 + 8], rax              ; player.position { x, y }
+    mov qword [r12 + 8], 0.0        ; player.position { x, y }
+    mov dword [r12 + 56], 0         ; player.currentFrame
+    mov dword [r12 + 32], 1000.0    ; player.acceleration
+    mov dword [r12 + 36], 1500.0    ; player.deceleration
+    mov dword [r12 + 40], 400.0     ; player.topSpeed
+    mov dword [r12 + 44], 400.0     ; player.jumpStrength
+    mov byte [r12 + 60], 1          ; player.isGrounded
 
-    mov [r12 + 16], eax             ; player.currentFrame
+    mov rdi, [r12]
+    mov dword [rdi + 48], 0         ; entity->animStateCount
 
     ret
 
 ; @param rdi, camera
 _initCamera:
-    mov r12, rdi
-
     ; ScreenWidth / 2
     call GetScreenWidth
     sar rax, 1
@@ -31,10 +35,8 @@ _initCamera:
     movd [rdi], xmm0
     movd [rdi + 4], xmm1
 
-    ; Set camera.rotation
-    mov dword [rdi + 16], 0.0
-    
-    ; Set camera.zoom
-    mov dword [rdi + 20], 1.75
+    mov dword [rdi + 16], 0.0       ; camera.rotation
+    mov dword [rdi + 20], 1.75      ; camera.zoom
 
     ret
+
