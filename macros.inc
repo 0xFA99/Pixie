@@ -31,3 +31,9 @@ macro setAnimation object, state, direction
     call _setAnimationSprite
 }
 
+macro clampss reg, min, max
+{
+    minss reg, max
+    maxss reg, min
+}
+

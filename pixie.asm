@@ -54,7 +54,7 @@ _start:
     addAnimation [player], STATE_FALL, DIRECTION_LEFT, 148, 150, 10.0
 
     ; Set Player animation
-    setAnimation player, STATE_FALL, DIRECTION_LEFT
+    setAnimation player, STATE_IDLE, DIRECTION_RIGHT
 
     ; Set 60 as target FPS
     callWith 60, SetTargetFPS
@@ -67,7 +67,10 @@ _start:
 
     ; get delta time
     call GetFrameTime
-    movss [deltaTime], xmm0
+    movss [frameTime], xmm0
+
+    movss xmm0, [frameTime]
+    callWith player, _updatePlayer
 
     callWith camera, _inputCamera
 
@@ -107,7 +110,8 @@ _start:
     syscall
 
 section '.data' writeable
-deltaTime       dd 0.0
+frameTime       dd 0.0
+gravity         dd 500.0
 
 section '.bss' writeable
 camera          Camera
@@ -115,6 +119,8 @@ player          Player
 
 section '.rodata'
 title           db "Pixie", 0x0
+
+debug_str       db "%f", 0xa, 0x0
 
 cameraZoomLevel dd 0.05
 cameraZoomMin   dd 0.5

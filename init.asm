@@ -14,8 +14,8 @@ _initPlayer:
     mov dword [r12 + 44], 400.0     ; player.jumpStrength
     mov byte [r12 + 60], 1          ; player.isGrounded
 
-    mov rdi, [r12]
-    mov dword [rdi + 48], 0         ; entity->animStateCount
+    ; mov rdi, [r12]
+    ; mov dword [rdi + 48], 0         ; entity->animStateCount
 
     ret
 
