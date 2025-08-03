@@ -1,3 +1,4 @@
+; @param rdi, player
 _renderPlayer:
     push rbp
     mov rbp, rsp
@@ -21,12 +22,12 @@ _renderPlayer:
 
     ; @param 2 - Source Rectangle - DrawTexturePro
     ; get data of current frame
-    movq xmm0, [rdi]                ; source.frame { x, y }
-    movq xmm1, [rdi + 8]            ; source.frame { width, height }
+    movups xmm0, [rdi]              ; source.frame { x, y }
+    movups xmm1, [rdi + 8]          ; source.frame { width, height }
 
     ; @param 3 - Destination Rectangle - DrawTexturePro
-    movsd xmm2, [r12 + 8]
-    movsd xmm3, xmm1
+    movaps xmm2, [r12 + 16]
+    movaps xmm3, xmm1
 
     ; @param 4 - Offset
     pxor xmm4, xmm4

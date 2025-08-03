@@ -2,10 +2,10 @@
 ; @param rsi: player
 _updateCamera:
 
-    movsd xmm0, [rsi + 16]
-    movsd [rdi + 8], xmm0
+    ; movsd xmm0, [rsi + 16]
+    ; movsd [rdi + 8], xmm0
 
-    movss xmm0, [rdi + 20]
+    ; movss xmm0, [rdi + 20]
 
 .checkMaxZoomLimit:
     movss xmm1, [cameraZoomMax]
@@ -37,45 +37,43 @@ _updatePlayer:
 
     ; compare player.state and anim.state
     cmp eax, [r13 + 16]             ; anim.state
-    jne .clampVelocityX
+    jne .setAnim
 
     ; compare player.direction and anim.direction
     cmp ecx, [r13 + 20]             ; anim.direction
-    jne .clampVelocityX
+    jne .setAnim
 
-    ; set player animation (required r12 - r14)
-    setAnimation  r15, [r15 + 48], [r15 + 52]
-
+.clampVelocityX:
     ; save back player->entity
     mov r12, [r15]                  ; player->entity
 
     ; save back player->anim
     mov r13, [r15 + 8]              ; player->anim
 
-.clampVelocityX:
-    movss xmm1, [r15 + 52]          ; player.velocity.x
+    movss xmm1, [r15 + 24]          ; player.velocity.x
     movss xmm2, [r15 + 40]          ; player.topSpeed
     xorps xmm3, xmm3
     subss xmm3, xmm2                ; -player.topSpeed
 
     ; clampss reg, min, max
     clampss xmm1, xmm3, xmm2
-    movss [r15 + 52], xmm1          ; player.velocity.x
+    movss [r15 + 24], xmm1          ; player.velocity.x
 
-    ; check if player isGrounded
-    mov al, [r15 + 60]              ; player.isGrounded
-    test al, al
+    ; if player.isGrounded
+    cmp byte [r15 + 60], 0          ; player.isGrounded
     jnz .updatePosition
 
     ; update player.velocity.y
-    movss xmm1, [gravity]
-    mulss xmm1, xmm0
-    movss [r15 + 56], xmm1          ; player.velocity.y
+    movss xmm1, [r15 + 28]          ; payer.velocity.y
+    movss xmm2, [gravity]
+    mulss xmm2, xmm0                ; frameTime
+    addss xmm1, xmm2
+    movss [r15 + 28], xmm1          ; player.velocity.y
 
-    ; check player.velocity.y > 0.0
-    xorps xmm1, xmm1
-    comiss xmm0, xmm1
-    jb .updatePosition
+    ; if player.velocity.y > 0.0
+    xorps xmm2, xmm2                ; 0.0
+    comiss xmm1, xmm2               ; player.velocity.y
+    jbe .updatePosition
 
     ; check player.state == STATE_JUMP
     cmp dword [r15 + 48], STATE_JUMP
@@ -84,39 +82,42 @@ _updatePlayer:
     mov dword [r15 + 48], STATE_FALL
 
 .updatePosition:
-    movss xmm1, [r15 + 52]
-    movss xmm2, [r15 + 56]
-    mulss xmm1, xmm0
-    mulss xmm2, xmm0
-    addss xmm1, [r15 + 24]
-    addss xmm2, [r15 + 28]
-    movss [r15 + 24], xmm1
-    movss [r15 + 28], xmm2
+    ; player.position += position + velocity * frameTime
+    movss xmm1, [r15 + 24]          ; player.velocity.x
+    movss xmm2, [r15 + 28]          ; player.velocity.y
+    mulss xmm1, xmm0                ; frameTime
+    mulss xmm2, xmm0                ; frameTime
+    addss xmm1, [r15 + 16]          ; player.position.x
+    addss xmm2, [r15 + 20]          ; player.position.y
+    movss [r15 + 16], xmm1
+    movss [r15 + 20], xmm2
 
-    ; check if player.position >= 0.0
-    xorps xmm2, xmm2                ; xmm2 = 0.0
-    movss xmm1, [r15 + 20]
+    ; if player.position.y >= 0.0
+    xorps xmm2, xmm2                ; 0.0
+    movss xmm1, [r15 + 20]          ; player.position.y
+    comiss xmm1, xmm2
     jb .playerOnAir
 
     movss [r15 + 20], xmm2          ; player.position.y = 0.0
     movss [r15 + 28], xmm2          ; player.velocity.y = 0.0
-    mov byte [r15 + 60], 1          ; player.isGrounded = true
+    mov byte [r15 + 60], 1          ; player.isGrouneded = true
+    mov eax, [r15 + 48]
 
-    ; check if player.state == STATE_FALL
-    cmp dword [r15 + 48], STATE_FALL
-    jne .updateFrame
+    ; state(STATE_JUMP -> 0), (STATE_FALL -> 1)
+    sub eax, 2                      ; eax = state - 2
+    cmp eax, 1                      ; if 0 or 1
+    setbe cl                        ; cl = 1 if STATE_JUMP or STATE_FALL
+    test cl, dl
+    jz .updateFrame                 ; if != STATE_JUMP and STATE_FALL
 
-    ; check if player.state == STATE_JUMP
-    cmp dword [r15 + 48], STATE_JUMP
-    jne .updateFrame
-
-    ; check if player.velocity.x != 0.0
-    movss xmm1, [r15 + 52]          ; player.velocity.x
+    ; if player.velocity.x != 0.0
+    movss xmm1, [r15 + 24]
     ucomiss xmm1, xmm2
-    mov eax, STATE_IDLE             ; if velocity == 0, STATE_IDLE
+    mov eax, STATE_IDLE
     mov ecx, STATE_RUN
-    cmovne eax, ecx                 ; if velocity != 0, STATE_RUN
-    mov [r15 + 48], eax             ; player.state = eax
+    cmovne eax, ecx
+
+    mov [r15 + 48], eax             ; player.state
 
     jmp .updateFrame
 
@@ -124,37 +125,41 @@ _updatePlayer:
     mov byte [r15 + 60], 0          ; player.isGrounded = false
 
 .updateFrame:
-    ; update entity.frameDuration
-    movss xmm1, [r12 + 52]          ; entity.frameDuration
-    addss xmm1, xmm0                ; frameTime
-    movss [r12 + 52], xmm1
+    ; frameDuration += frameTime (xmm0)
+    movss   xmm1, [r12 + 52]        ; entity->frameDuration
+    addss   xmm1, xmm0
+    movss   [r12 + 52], xmm1
 
+    ; frameDuration >= 1.0 / frameRate
     mov eax, 1.0
     movd xmm2, eax
 
-    movss xmm1, [r12 + 52]          ; entity.frameDuration
-    movss xmm3, [r13 + 8]           ; animState.frameRate
-    rcpss xmm2, xmm3                ; 1.0 / frameRate
-    comiss xmm1, xmm2
-    jae .nextFrame
-
-    ret
+    ; Calculate 1.0 / frameRate
+    rcpss   xmm2, [r13 + 8]         ; xmm2 = 1.0 / animState.frameRate
+    comiss  xmm1, xmm2
+    jb .ret
 
 .nextFrame:
-    xorps xmm2, xmm2
-    movss [r12 + 52], xmm2          ; entity.frameDuration = 0.0
-    add dword [r15 + 56], 1         ; player.currentFrame++
+    xorps   xmm4, xmm4              ; 0.0f
+    movss   [r12 + 52], xmm4        ; reset entity->frameDuration
 
-    ; check player.currentFrame > endFrame
-    mov eax, [r15 + 56]             ; player.currentFrame
-    cmp eax, [r13 + 4]              ; animState.endFrame
-    ja .resetFrame
+    add     dword [r15 + 56], 1     ; player->currentFrame++
 
+    mov     eax, [r13 + 4]          ; animStates.endFrame
+    cmp     [r15 + 56], eax         ; if currentFrame > endFrame
+    ja      .resetFrame             ; must reset to startFrame
+
+.ret:
     ret
 
 .resetFrame:
-    mov eax, [r13]                  ; animState.startFrame
-    mov [r12 + 56], eax             ; player.startFrame
-
+    mov     eax, [r13]              ; startFrame
+    mov     [r15 + 56], eax         ; reset currentFrame
     ret
+
+.setAnim:
+    ; set player animation (required r12 + r14)
+    setAnimation r15, [r15 + 48], [r15 + 52]
+
+    jmp .clampVelocityX
 

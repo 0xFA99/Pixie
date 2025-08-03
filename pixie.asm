@@ -70,6 +70,9 @@ _start:
     movss [frameTime], xmm0
 
     movss xmm0, [frameTime]
+    callWith player, _inputPlayer
+
+    movss xmm0, [frameTime]
     callWith player, _updatePlayer
 
     callWith camera, _inputCamera
@@ -111,7 +114,7 @@ _start:
 
 section '.data' writeable
 frameTime       dd 0.0
-gravity         dd 500.0
+gravity         dd 980.0
 
 section '.bss' writeable
 camera          Camera
@@ -119,8 +122,6 @@ player          Player
 
 section '.rodata'
 title           db "Pixie", 0x0
-
-debug_str       db "%f", 0xa, 0x0
 
 cameraZoomLevel dd 0.05
 cameraZoomMin   dd 0.5

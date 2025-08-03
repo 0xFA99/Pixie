@@ -135,11 +135,10 @@ _addFlipSheet:
     movaps xmm0, [rdi]              ; Load original frame
 
     ; Load new frame[index + frameCount] into rdi
-    mov rdi, [r12 + 24]
-    mov eax, r15d
-    add eax, r13d
-    shl rax, 4
-    add rdi, rax
+    mov rdi, [r12 + 24]             ; base pointer
+    lea rax, [r15 + r13]            ; index
+    shl rax, 4                      ; *= sizeof(struct) = 16
+    add rdi, rax                    ; rdi = &base[index]
 
     ; Flip the width: negate the value in xmm0
     xorps xmm1, xmm1

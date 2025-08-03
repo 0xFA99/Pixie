@@ -4,22 +4,21 @@
 ; @param ecx, start
 ; @param r8d, end
 ; @param xmm0, fps
-
 _addAnimationSprite:
-    push    rbp
-    mov     rbp, rsp
+    push rbp
+    mov rbp, rsp
 
     mov r12, rdi                    ; entity
-    mov r13d, esi                   ; state
-    mov r14d, edx                   ; direction
-    movd r15d, xmm0                  ; FPS
+    movd r13d, xmm0                 ; FPS
 
     sub rsp, 16
+    mov [rbp - 12], edx             ; direction
+    mov [rbp - 16], esi             ; state
     mov [rbp - 8], ecx              ; frameEnd
     mov [rbp - 4], r8d              ; frameStart
 
     ; check entity->animStateCount != 0
-    mov eax, [r12 + 48]
+    mov eax, [r12 + 48]             ; entity->animStateCount
     test eax, eax
     jnz .reAlloc
 
@@ -45,12 +44,13 @@ _addAnimationSprite:
     sal rax, 5                      ; sizeof animStates (32)
     add rdi, rax                    ; entity->animStates[animStateCount]
 
-    mov rax, [rbp - 8]              ; { startFrame, endFrame }
+    mov rax, [rbp - 8]              ; { endFrame, startFrame }
     mov [rdi], rax
-    mov [rdi + 12], r15d            ; FPS
 
-    mov [rdi + 16], r13d            ; state
-    mov [rdi + 20], r14d            ; direction
+    mov [rdi + 8], r13d             ; FPS
+
+    mov rax, [rbp - 16]             ; { direction, state }
+    mov [rdi + 16], rax
 
     add dword [r12 + 48], 1         ; entity->animStateCount++
 
@@ -67,7 +67,7 @@ _setAnimationSprite:
 
     ; get frameCount for extend frames
     mov rdi, [r12]                  ; player->entity
-    mov r13d, [rdi + 48]            ; animStateCount
+    mov r13d, [rdi + 48]            ; entity.animStateCount
 
     ; index 0
     mov ecx, 0
@@ -75,10 +75,10 @@ _setAnimationSprite:
     jmp .loop1
 
 .loop2:
-    ; get reference of animState[counter]
+    ; get reference of entity.animStates[counter]
     mov rdi, [r12]                  ; player->entity
-    mov rdi, [rdi + 40]             ; sprite.frameCount
-    mov eax, ecx
+    mov rdi, [rdi + 40]             ; entity.animStates
+    mov eax, ecx                    ; index
     sal rax, 5                      ; sizeof animState (32)
     add rdi, rax
 
