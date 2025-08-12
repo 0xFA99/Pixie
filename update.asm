@@ -2,13 +2,13 @@
 ; @param rsi: player
 _updateCamera:
 
+    ; DEBUG
     ; movsd xmm0, [rsi + 16]
     ; movsd [rdi + 8], xmm0
-
     ; movss xmm0, [rdi + 20]
 
 .checkMaxZoomLimit:
-    movss xmm1, [cameraZoomMax]
+    movss xmm1, [camZoomMax]
     comiss xmm0, xmm1
     jbe .checkMinZoomLimit
 
@@ -16,7 +16,7 @@ _updateCamera:
     jmp .return
 
 .checkMinZoomLimit:
-    movss xmm1, [cameraZoomMin]
+    movss xmm1, [camZoomMin]
     comiss xmm0, xmm1
     jae .return
 
@@ -52,7 +52,7 @@ _updatePlayer:
 
     movss xmm1, [r15 + 24]          ; player.velocity.x
     movss xmm2, [r15 + 40]          ; player.topSpeed
-    xorps xmm3, xmm3
+    pxor xmm3, xmm3
     subss xmm3, xmm2                ; -player.topSpeed
 
     ; clampss reg, min, max
@@ -71,7 +71,7 @@ _updatePlayer:
     movss [r15 + 28], xmm1          ; player.velocity.y
 
     ; if player.velocity.y > 0.0
-    xorps xmm2, xmm2                ; 0.0
+    pxor xmm2, xmm2                ; 0.0
     comiss xmm1, xmm2               ; player.velocity.y
     jbe .updatePosition
 
@@ -93,7 +93,7 @@ _updatePlayer:
     movss [r15 + 20], xmm2
 
     ; if player.position.y >= 0.0
-    xorps xmm2, xmm2                ; 0.0
+    pxor xmm2, xmm2                ; 0.0
     movss xmm1, [r15 + 20]          ; player.position.y
     comiss xmm1, xmm2
     jb .playerOnAir
@@ -101,25 +101,22 @@ _updatePlayer:
     movss [r15 + 20], xmm2          ; player.position.y = 0.0
     movss [r15 + 28], xmm2          ; player.velocity.y = 0.0
     mov byte [r15 + 60], 1          ; player.isGrouneded = true
-    mov eax, [r15 + 48]
 
     ; state(STATE_JUMP -> 0), (STATE_FALL -> 1)
-    sub eax, 2                      ; eax = state - 2
-    cmp eax, 1                      ; if 0 or 1
-    setbe cl                        ; cl = 1 if STATE_JUMP or STATE_FALL
-    test cl, dl
-    jz .updateFrame                 ; if != STATE_JUMP and STATE_FALL
+    mov eax, [r15 + 48]
+    cmp eax, STATE_FALL
+    jbe .checkVelocity        ; berlaku untuk STATE_JUMP (0) dan STATE_FALL (1)
+    jmp .updateFrame
 
-    ; if player.velocity.x != 0.0
+.checkVelocity:
     movss xmm1, [r15 + 24]
     ucomiss xmm1, xmm2
     mov eax, STATE_IDLE
     mov ecx, STATE_RUN
     cmovne eax, ecx
-
-    mov [r15 + 48], eax             ; player.state
-
+    mov [r15 + 48], eax
     jmp .updateFrame
+
 
 .playerOnAir:
     mov byte [r15 + 60], 0          ; player.isGrounded = false
@@ -131,16 +128,15 @@ _updatePlayer:
     movss   [r12 + 52], xmm1
 
     ; frameDuration >= 1.0 / frameRate
-    mov eax, 1.0
+    mov eax, 0x3f800000             ; 1.0
     movd xmm2, eax
 
-    ; Calculate 1.0 / frameRate
     rcpss   xmm2, [r13 + 8]         ; xmm2 = 1.0 / animState.frameRate
     comiss  xmm1, xmm2
     jb .ret
 
 .nextFrame:
-    xorps   xmm4, xmm4              ; 0.0f
+    pxor xmm4, xmm4              ; 0.0f
     movss   [r12 + 52], xmm4        ; reset entity->frameDuration
 
     add     dword [r15 + 56], 1     ; player->currentFrame++

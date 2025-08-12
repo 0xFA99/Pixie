@@ -1,162 +1,145 @@
-; @param rdi, sprite
-; @param rsi, texture
-; @param edx, rows
-; @param ecx, columns
+; @func     initSpriteSheet
+; @desc     Bind texture to sprite and define frame grid layout
+; @param    rdi     -> sprite entity
+; @param    rsi     -> texture
+; @param    edx     -> rows count
+; @param    ecx     -> columns count
+; @feat     Turns a boring texture into a  frame-splitting war machine
+; @note     Breaks if you pass garbage, but so do you
 _loadSpriteSheet:
-    push rbp
-    mov rbp, rsp
+    push        rbp
+    mov         rbp, rsp
 
     ; backup arguments
-    mov r12, rdi                    ; sprite
-    mov r13, rsi                    ; texture
-    mov r14d, edx                   ; rows
-    mov r15d, ecx                   ; columns
-    call LoadTexture
+    mov         r15, rdi                    ; sprite
+    mov         r14d, edx                   ; rows
+    mov         r13d, ecx                   ; columns
 
-    ; sprite->frameCount = rows * columns
-    mov eax, r14d                   ; rows
-    imul eax, r15d                  ; columns
-    mov [r12 + 32], eax             ; sprite->frameCount
+    ; overwrite {rcx, rdx, rsi, rdi, r8, r9, r11}
+    call        LoadTexture
 
-    ; Allocate 16 bytes stack for local variable
-    sub rsp, 16
+    ; sprite.frameCount = rows * columns
+    mov         eax, r14d                   ; rows
+    imul        eax, r13d                   ; columns
+    mov         ecx, eax                    ; sprite.frameCount (backup)
+    mov         [r15 + 32], eax             ; sprite.frameCount
+
+    mov         rbx, [r15 + 4]              ; texture {width, height}
 
     ; frame.width = texture.width / columns
-    ; todo)) Optimize this idiv big cycles or cry harder
-    xor edx, edx
-    mov eax, [r12 + 4]              ; texture.width
-    idiv r15d                       ; columns
-    mov [rbp - 4], eax              ; [rbp - 4] frame.width
+    ; xor         rdx, rdx                  ; im sure the rdx is 0 :P
+    mov         eax, ebx                    ; texture.width
+    idiv        r13d                        ; columns
+    mov         r12d, eax                   ; frame.width
 
     ; frame.height = texture.height / rows
-    ; todo)) Optimize this idiv big cycles or cry harder
-    xor edx, edx
-    mov eax, [r12 + 8]              ; texture.height
-    idiv r14d
-    mov [rbp - 8], eax              ; [rbp - 8] frame.height
+    xor         rdx, rdx
+    ; mov         eax, ebx                  ; texture.height
+    mov         rax, rbx                    ; texture.height
+    shr         rax, 32
+    idiv        r14d                        ; rows
+    mov         ebx, eax                    ; frame.height
 
-    mov edi, [r12 + 32]             ; sprite.frameCount
-    sal edi, 4                      ; sizeof Rectangle (16)
-    call malloc
-    mov [r12 + 24], rax             ; sprite.frames*
+    ; allocation memory for all frames
+    mov         edi, ecx                    ; @param_1, sprite.frameCount
+    sal         rdi, 4                      ; sizeof Rectangle (16)
 
-    ; Initialize loop counters
-    xor ecx, ecx                    ; counter
-    mov dword [rbp - 12], 0         ; index row
+    ; overwrite {rax, rcx, rdx, rsi, rdi, rbp, rsp, r8, r9, r10, r11}
+    call        malloc
+    mov         [r15 + 24], rax             ; sprite.frames*
+    mov         r11d, ebx                   ; frame.height
+    mov         rbx, rax                    ; sprite.frames*
 
-.loop_x:
-    cmp dword [rbp - 12], r14d      ; row >= rows
-    jge .return                     ; exit loop
+    ; initialize loop counters
+    xor         ecx, ecx                    ; counter
+    xor         r8d, r8d                    ; index row
 
-    ; Reset column
-    mov dword [rbp - 16], 0
+.loop_row:
+    cmp         r8d, r14d                   ; row >= rows
+    jge         .done
 
-.loop_y:
-    cmp dword [rbp - 16], r15d      ; column >= columns
-    jge .next_row
+    xor         r9d, r9d                    ; reset index column
 
-    ; Calculate frame
-    ; frame.x = column * width
-    mov eax, [rbp - 16]
-    imul eax, [rbp - 4]
-    cvtsi2ss xmm0, eax              ; xmm0 = x
+.loop_column:
+    cmp         r9d, r13d                   ; column >= columns
+    jge         .next_row
 
-    ; frame.y = row * height
-    mov eax, [rbp - 12]
-    imul eax, [rbp - 8]
-    cvtsi2ss xmm1, eax              ; xmm1 = y
+    ; frame.x = column * frame.width
+    mov         eax, r9d                    ; column
+    imul        eax, r12d                   ; frame.width
+    cvtsi2ss    xmm0, eax                   ; xmm0 {frame.x}
 
-    ; load width and height
-    cvtsi2ss xmm2, [rbp - 4]        ; xmm2 = width
-    cvtsi2ss xmm3, [rbp - 8]        ; xmm3 = height
+    ; frame.y = row * frame.height
+    mov         eax, r8d                    ; row
+    imul        eax, r11d                   ; frame.height
+    cvtsi2ss    xmm1, eax                   ; xmm1 {frame.y}
 
-    ; Pack into xmm0 = { x, y, width, height }
-    unpcklps xmm0, xmm1             ; xmm0 = { x, y }
-    unpcklps xmm2, xmm3             ; xmm2 = { width, height }
-    shufps xmm0, xmm2, 01000100b    ; xmm0 = { x, y, width, height }
+    ; load frame {width, height}
+    cvtsi2ss    xmm2, r12d                  ; xmm2 {frame.width}
+    cvtsi2ss    xmm3, r11d                  ; xmm3 {frame.height}
 
-    ; Get pointer to frames[counter]
-    mov rdi, [r12 + 24]             ; sprite.frames*
-    mov eax, ecx
-    shl rax, 4
-    add rdi, rax
+    ; pack xmm0 {x, y, width, height}
+    unpcklps    xmm0, xmm1                  ; xmm0 {x, y}
+    unpcklps    xmm2, xmm3                  ; xmm2 {width, height}
+    shufps      xmm0, xmm2, 01000100b       ; xmm0 {x, y, width, height}
 
-    ; Store frame data
-    movaps [rdi], xmm0
+    ; store to sprite.frames[counter]
+    mov         eax, ecx                    ; counter
+    shl         rax, 4                      ; sizeof Rectangle (16)
+    lea         rdi, [rbx + rax]            ; sprite.frames[counter]
 
-    ; Increase counter and index column
-    inc ecx
-    add dword [rbp - 16], 1
-    jmp .loop_y
+    ; store all data {x, y, width, height}
+    movaps      [rdi], xmm0
+
+    ; increase counter and index column
+    inc         ecx                         ; counter++
+    inc         r9d                         ; index column++
+    jmp         .loop_column
 
 .next_row:
-    add dword [rbp - 12], 1
-    jmp .loop_x
+    inc         r8d                         ; index row++
+    jmp         .loop_row
 
-.return:
-    add rsp, 16
-    pop rbp
+.done:
+    pop         rbp
     ret
 
 _addFlipSheet:
-    ; Save SpriteEntity address to r12
-    mov r12, rdi
+    mov         r10, rdi                    ; sprite
+    mov         r11d, [r10 + 32]            ; old frameCount
+    lea         r12d, [r11d*2]              ; new frameCount
 
-    ; Get frameCount and store in r13d
-    mov r13d, [r12 + 32]
+    ; realloc sprite.sheet to (newFrameCount << 4) bytes
+    mov         rdi, [r10 + 24]             ; old sprite pointer
+    mov         esi, r12d                   ; newFrameCount
+    shl         esi, 4
 
-    ; Calculate new frameCount (frameCount * 2)
+    ; overwrite {rax, rcx, rdx, rsi, rdi, r8, r9}
+    call        realloc
+    mov         [r10 + 24], rax             ; update sprite.sheet
 
-    ; Store resultt in r14d
-    mov eax, r13d
-    add eax, eax
-    mov r14d, eax
+    ; prepare src/dst pointers
+    mov         rbx, rax
+    mov         r8, rbx
+    mov         eax, r11d
+    shl         rax, 4
+    lea         r8, [r8 + rax]
 
-    ; Realloc frames with new frameCount
-    shl rax, 4                      ; sizeof rectangle (16)
-    mov rsi, rax                    ; @param 1 size
-    mov rdi, [r12 + 24]             ; @return sprite.frames*
-    call realloc
-    mov [r12 + 24], rax             ; sprite.frames*
-
-    ; Initialize index for looping
-    mov r15d, 0
+    ; prepare flip mask in xmm1 once
+    mov         eax, MASK_FLIP
+    movd        xmm1, eax
+    pslldq      xmm1, 8                     ; shift to upper qword
 
 .loop:
-    ; Check if index >= frameCount
-    cmp r15d, r13d
-    jge .return
+    movaps      xmm0, [rbx]
+    xorps       xmm0, xmm1
+    movaps      [r8], xmm0
 
-    ; Load 2 frames (original and flipped) into xmm0
-    mov rdi, [r12 + 24]             ; texture.frames*
-    mov eax, r15d
-    shl rax, 4
-    add rdi, rax
-    movaps xmm0, [rdi]              ; Load original frame
+    lea         rbx, [rbx + 16]
+    lea         r8, [r8 + 16]
+    dec         r11d
+    jnz         .loop
 
-    ; Load new frame[index + frameCount] into rdi
-    mov rdi, [r12 + 24]             ; base pointer
-    lea rax, [r15 + r13]            ; index
-    shl rax, 4                      ; *= sizeof(struct) = 16
-    add rdi, rax                    ; rdi = &base[index]
-
-    ; Flip the width: negate the value in xmm0
-    xorps xmm1, xmm1
-    mov eax, -0.0
-    movd xmm1, eax
-    pslldq xmm1, 8
-    xorps xmm0, xmm1
-
-    ; Store updated frame values into the new frame
-    movaps [rdi], xmm0
-
-    ; Increase index
-    inc r15d
-
-    jmp .loop
-
-.return:
-    ; Update old frameCount with new frameCount
-    mov [r12 + 32], r14d
+    mov         [r10 + 32], r12d            ; update frameCount
     ret
 

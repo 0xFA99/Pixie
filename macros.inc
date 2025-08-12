@@ -12,14 +12,15 @@ macro addAsset var, path
 macro addAnimation entity, state, direction, frameStart, frameEnd, fps
 {
     mov rdi, entity
-    mov esi, state
-    mov edx, direction
+
+    mov sil, state
+    mov dl, direction
+
     mov ecx, frameStart
     mov r8d, frameEnd
 
     mov eax, fps
     movd xmm0, eax
-
     call _addAnimationSprite
 }
 
@@ -89,8 +90,7 @@ macro applyDeceleration player, frameTime
     ja .apply
 
     ; player.velocity.x = 0.0
-    xorps xmm3, xmm3
-    movss [player + 24], xmm3
+    mov dowrd [player + 24], 0.0
     jmp .return
 
 .apply:
@@ -129,6 +129,130 @@ macro ApplyDirectionRun
     cvtsi2ss xmm2, r14d             ; direction
     mulss xmm2, [r12 + 32]          ; player.acceleration
     mulss xmm2, xmm0                ; frameTime
-    addss xmm1, xmm2                ; player.velocity.x
+
+    movss xmm1, [r12 + 24]          ; player.velocity.x
+    addss xmm1, xmm2
     movss [r12 + 24], xmm1
 }
+
+
+; @param xmm0   : velocity
+; @param dl     : direction
+; @return al    : (0 or 1)
+macro checkDirection velocity, direction
+{
+    local .pos, .neg, .ret
+
+    xor al, al
+    pxor xmm8, xmm8
+
+    cmp direction, DIRECTION_LEFT
+    je .pos
+
+    cmp direction, DIRECTION_RIGHT
+    je .neg
+
+    jmp .ret
+
+.pos:
+    ; if velocity > 0.0
+    comiss velocity, xmm8
+    jbe .ret
+
+    mov al, 1
+    jmp .ret
+
+.neg:
+    ; if velocity < 0.0
+    comiss xmm8, velocity
+    jbe .ret
+
+    mov al, 1
+
+.ret:
+}
+
+; fabsf - computes absolute value of a float
+; @param    arg - float in xmm register (modified in-place)
+; @return   arg - absolute value (in same register)
+macro fabsf arg
+{
+    mov eax, 0x7FFFFFFF             ; mask abs
+    movd xmm8, eax
+    andps arg, xmm8
+}
+
+macro negss arg
+{
+    mov eax, 0x80000000             ; mask negation
+    movd xmm8, eax
+    xorps arg, xmm8
+}
+
+macro signss arg
+{
+    local .negOne, .return
+
+    pxor xmm8, xmm8
+
+    comiss arg, xmm8
+    jbe .negOne
+
+    mov eax, 0x3f800000             ; 1.0
+    movd arg, eax
+
+    jmp .return
+
+.negOne:
+    mov eax, 0xbf800000             ; -1.0
+    movd arg, eax
+
+.return:
+}
+
+macro updateDirection direction
+{
+    local .setLeft, .done
+
+    xor eax, eax
+    cmp direction, eax
+    jbe .setLeft
+
+    mov eax, DIRECTION_RIGHT
+    jmp .ret
+
+.setLeft:
+    mov eax, DIRECTION_LEFT
+
+.done:
+}
+
+; Set low 32 bits of reg to value
+macro setLow32 reg, value
+{
+    mov         r10, reg
+    mov         r11, MASK_HIGH
+    and         r10, r11
+    or          r10d, value
+    mov         reg, r10
+}
+
+
+; Set high 32 bits of reg to value
+; macro setHigh32 reg, value
+; {
+;     mov         r10d, value
+;     shl         r10, 32
+;     mov         r11, reg
+;     and         r11, 0xFFFFFFFF
+;     or          r11, r10
+;     mov         reg, r11
+; }
+macro setHigh32 reg64, value32 {
+    local temp
+    mov temp, value32
+    shl temp, 32
+    and reg64, 0xFFFFFFFF
+    or reg64, temp
+}
+
