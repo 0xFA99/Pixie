@@ -41,27 +41,27 @@ struc AnimSeq
     .frameRate              dd 0.0      ;  4 |  8
 }
 
-; 2 bytes
+; 4 bytes
 struc Status
 {
-    .state                  db 0        ;  1 |  0
-    .direction              db 0        ;  1 |  1
+    .state                  dw 0        ;  2 |  0
+    .direction              dw 0        ;  2 |  2
 }
 
-; 14 bytes
+; 16 bytes
 struc AnimState
 {
     .animSeq                AnimSeq     ; 12 |  0
-    .status                 Status      ;  2 | 12
+    .status                 Status      ;  4 | 12
 }
 
-; 50 bytes
+; 52 bytes
 struc SpriteEntity
 {
     .sheet                  SpriteSheet ; 36 |  0
     .animStates             dq 0        ;  8 | 36 | *AnimState
-    .animStateCount         dd 0        ;  4 | 42
-    .frameDuration          dd 0.0      ;  4 | 46
+    .animStateCount         dd 0        ;  4 | 44
+    .frameDuration          dd 0.0      ;  4 | 48
 }
 
 ; 36 bytes
@@ -76,15 +76,15 @@ struc Movement
     .breakThreshold         dd 0.0      ;  4 | 32
 }
 
-; 59 bytes (no need to align now)
+; 61 bytes (no need to align now)
 struc Player
 {
     .entity                 dq 0        ;  8 |  0 | *SpriteEntity
     .currentState           dq 0        ;  8 |  8 | *AnimState
     .movement               Movement    ; 36 | 16
-    .status                 Status      ;  2 | 52
-    .currentFrame           dd 0        ;  4 | 54
-    .isGrounded             db 0        ;  1 | 58
+    .status                 Status      ;  4 | 52
+    .currentFrame           dd 0        ;  4 | 56
+    .isGrounded             db 0        ;  1 | 60
 }
 
 ; 24 bytes

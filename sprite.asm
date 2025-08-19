@@ -34,20 +34,22 @@ _loadSpriteSheet:
 
     ; frame.height = texture.height / rows
     xor         rdx, rdx
-    ; mov         eax, ebx                  ; texture.height
     mov         rax, rbx                    ; texture.height
     shr         rax, 32
     idiv        r14d                        ; rows
-    mov         ebx, eax                    ; frame.height
+    mov         r11d, eax                   ; frame.height
+
+    ; load frame {width, height}
+    cvtsi2ss    xmm2, r12d                  ; xmm2 {frame.width}
+    cvtsi2ss    xmm3, r11d                  ; xmm3 {frame.height}
 
     ; allocation memory for all frames
-    mov         edi, ecx                    ; @param_1, sprite.frameCount
+    mov         rdi, rcx                    ; sprite.frameCount
     sal         rdi, 4                      ; sizeof Rectangle (16)
 
     ; overwrite {rax, rcx, rdx, rsi, rdi, rbp, rsp, r8, r9, r10, r11}
     call        malloc
     mov         [r15 + 24], rax             ; sprite.frames*
-    mov         r11d, ebx                   ; frame.height
     mov         rbx, rax                    ; sprite.frames*
 
     ; initialize loop counters
@@ -60,6 +62,11 @@ _loadSpriteSheet:
 
     xor         r9d, r9d                    ; reset index column
 
+    ; frame.y = row * frame.height
+    mov         eax, r8d                    ; row
+    imul        eax, r11d                   ; frame.height
+    cvtsi2ss    xmm1, eax                   ; xmm1 {frame.y}
+
 .loop_column:
     cmp         r9d, r13d                   ; column >= columns
     jge         .next_row
@@ -68,15 +75,6 @@ _loadSpriteSheet:
     mov         eax, r9d                    ; column
     imul        eax, r12d                   ; frame.width
     cvtsi2ss    xmm0, eax                   ; xmm0 {frame.x}
-
-    ; frame.y = row * frame.height
-    mov         eax, r8d                    ; row
-    imul        eax, r11d                   ; frame.height
-    cvtsi2ss    xmm1, eax                   ; xmm1 {frame.y}
-
-    ; load frame {width, height}
-    cvtsi2ss    xmm2, r12d                  ; xmm2 {frame.width}
-    cvtsi2ss    xmm3, r11d                  ; xmm3 {frame.height}
 
     ; pack xmm0 {x, y, width, height}
     unpcklps    xmm0, xmm1                  ; xmm0 {x, y}
@@ -105,41 +103,89 @@ _loadSpriteSheet:
     ret
 
 _addFlipSheet:
-    mov         r10, rdi                    ; sprite
-    mov         r11d, [r10 + 32]            ; old frameCount
-    lea         r12d, [r11d*2]              ; new frameCount
+    ; No stack allocation needed - use existing registers
+    mov         r8, rdi                     ; sprite (preserve original)
+    mov         ecx, [r8 + 32]              ; old frameCount
 
-    ; realloc sprite.sheet to (newFrameCount << 4) bytes
-    mov         rdi, [r10 + 24]             ; old sprite pointer
-    mov         esi, r12d                   ; newFrameCount
-    shl         esi, 4
+    ; Calculate new size directly in register
+    lea         edx, [rcx + rcx]            ; new frameCount = old * 2
+    mov         rdi, [r8 + 24]              ; current sprite.frames pointer
+    mov         rsi, rdx
+    shl         rsi, 4
 
-    ; overwrite {rax, rcx, rdx, rsi, rdi, r8, r9}
+    ; Preserve values we need after realloc in callee-saved registers
+    mov         r10, r8                     ; sprite pointer
+    mov         r11d, ecx                   ; old frameCount
+    mov         r12d, edx                   ; new frameCount
     call        realloc
-    mov         [r10 + 24], rax             ; update sprite.sheet
 
-    ; prepare src/dst pointers
-    mov         rbx, rax
-    mov         r8, rbx
-    mov         eax, r11d
-    shl         rax, 4
-    lea         r8, [r8 + rax]
+    ; Update sprite.frames pointer
+    mov         [r10 + 24], rax
 
-    ; prepare flip mask in xmm1 once
-    mov         eax, MASK_FLIP
+    ; Setup pointers using lea for efficiency
+    mov         r8, rax                     ; source = base
+    lea         r9, [rax + r11 * 8]
+    lea         r9, [r9 + r11 * 8]
+
+    ; Prepare flip mask once in xmm1 (flip width only)
+    mov         eax, MASK_FLIP              ;
     movd        xmm1, eax
-    pslldq      xmm1, 8                     ; shift to upper qword
+    pslldq      xmm1, 8
 
-.loop:
-    movaps      xmm0, [rbx]
+    ; Use remaining count directly in r11d
+    test        r11d, r11d
+    jz          .update_count
+
+    ; Check for unroll opportunity
+    cmp         r11d, 4
+    jl          .process_single
+
+.process_batch:
+    ; Process 4 rectangles at once when count >= 4
+    sub         r11d, 4
+
+    ; Load and flip 4 rectangles in parallel
+    movaps      xmm0, [r8]                 ; rect 0
+    movaps      xmm2, [r8 + 16]            ; rect 1
+    movaps      xmm4, [r8 + 32]            ; rect 2
+    movaps      xmm6, [r8 + 48]            ; rect 3
+
+    ; Apply horizontal flip (negate width)
     xorps       xmm0, xmm1
-    movaps      [r8], xmm0
+    xorps       xmm2, xmm1
+    xorps       xmm4, xmm1
+    xorps       xmm6, xmm1
 
-    lea         rbx, [rbx + 16]
-    lea         r8, [r8 + 16]
+    ; Store flipped rectangles
+    movaps      [r9], xmm0
+    movaps      [r9 + 16], xmm2
+    movaps      [r9 + 32], xmm4
+    movaps      [r9 + 48], xmm6
+
+    ; Advance pointers by 64 bytes (4 * 16)
+    add         r8, 64
+    add         r9, 64
+
+    ; Continue if we have 4+ rectangles left
+    cmp         r11d, 4
+    jge         .process_batch
+
+.process_single:
+    ; Handle remaining rectangles (0-3)
+    test        r11d, r11d
+    jz          .update_count
+
+    movaps      xmm0, [r8]                 ; load rectangle
+    xorps       xmm0, xmm1                 ; flip width
+    movaps      [r9], xmm0                 ; store flipped
+
+    add         r8, 16                      ; next source
+    add         r9, 16                      ; next dest
     dec         r11d
-    jnz         .loop
+    jnz         .process_single
 
+.update_count:
     mov         [r10 + 32], r12d            ; update frameCount
     ret
+
 

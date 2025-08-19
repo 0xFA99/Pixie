@@ -2,7 +2,7 @@
 _initPlayer:
     mov         r12, rdi
 
-    mov         edi, 50                     ; sizeof SpriteEntity
+    mov         edi, 52                     ; sizeof SpriteEntity
     call        malloc
     mov         [r12], rax                  ; player->entity
 
@@ -11,22 +11,20 @@ _initPlayer:
     mov         dword [r12 + 40], 400.0     ; player.topSpeed
     mov         dword [r12 + 44], 400.0     ; player.jumpForce
     mov         dword [r12 + 48], 300.0     ; player.breakThreshold
-    mov         byte [r12 + 68], 1          ; player.isGrounded
+    mov         byte [r12 + 60], 1          ; player.isGrounded
 
     mov         rdi, [r12]                  ; player->entity
-    mov         dword [rdi + 42], 0         ; entity->animStateCount
+    mov         dword [rdi + 44], 0         ; entity->animStateCount
     ret
 
 ; @param rdi, camera
 _initCamera:
-    ; ScreenWidth / 2
     call        GetScreenWidth
-    sar         rax, 1
+    sar         rax, 1                      ; screenWidth / 2
     cvtsi2ss    xmm0, rax
 
-    ; ScreenHeight / 2
     call        GetScreenHeight
-    sar         rax, 1
+    sar         rax, 1                      ; screenHeight / 2
     cvtsi2ss    xmm1, rax
 
     ; Setup camera.offset

@@ -18,7 +18,6 @@ extrn IsKeyPressed
 
 extrn malloc
 extrn realloc
-extrn printf
 
 STATE_IDLE      equ  0
 STATE_RUN       equ  1
@@ -33,7 +32,6 @@ KEY_RIGHT       equ 262
 KEY_LEFT        equ 263
 KEY_UP          equ 265
 
-MASK_HIGH       equ 0xFFFFFFFF00000000
-MASK_LOW        equ 0x00000000FFFFFFFF
 MASK_FLIP       equ 0x80000000
+MASK_ABS        equ 0x7FFFFFFF
 
