@@ -8,14 +8,14 @@ _renderPlayer:
 
     ; @param 1 - Texture - DrawTexturePro
     ; Setup texture
-    sub rsp, 32                             ; 24 texture + 8 padding
+    sub rsp, 32                             ; 20 texture + 12 padding
     movaps xmm0, [r13]                      ; texture {id, w, h, mipmaps}
     movaps [rsp], xmm0
     mov eax, [r13 + 16]                     ; texture.format
     mov [rsp + 16], eax
 
     ; player.frames[player.currentFrame]
-    mov rdi, [r13 + 24]                     ; player.frames*
+    mov rdi, [r13 + 20]                     ; player.frames*
     mov eax, [r12 + 56]                     ; player.currentFrame
     sal rax, 4                              ; sizeof rectangle (16)
     add rdi, rax                            ; base + currentFrame

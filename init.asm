@@ -2,7 +2,7 @@
 _initPlayer:
     mov         r12, rdi
 
-    mov         edi, 52                     ; sizeof SpriteEntity
+    mov         edi, 48                     ; sizeof SpriteEntity
     call        malloc
     mov         [r12], rax                  ; player->entity
 
@@ -14,7 +14,7 @@ _initPlayer:
     mov         byte [r12 + 60], 1          ; player.isGrounded
 
     mov         rdi, [r12]                  ; player->entity
-    mov         dword [rdi + 44], 0         ; entity->animStateCount
+    mov         dword [rdi + 40], 0         ; entity->animStateCount
     ret
 
 ; @param rdi, camera

@@ -22,12 +22,12 @@ _loadSpriteSheet:
     mov         eax, r14d                   ; rows
     imul        eax, r13d                   ; columns
     mov         ecx, eax                    ; sprite.frameCount (backup)
-    mov         [r15 + 32], eax             ; sprite.frameCount
+    mov         [r15 + 28], eax             ; sprite.frameCount
 
     mov         rbx, [r15 + 4]              ; texture {width, height}
 
     ; frame.width = texture.width / columns
-    ; xor         rdx, rdx                  ; im sure the rdx is 0 :P
+    xor         rdx, rdx
     mov         eax, ebx                    ; texture.width
     idiv        r13d                        ; columns
     mov         r12d, eax                   ; frame.width
@@ -49,7 +49,7 @@ _loadSpriteSheet:
 
     ; overwrite {rax, rcx, rdx, rsi, rdi, rbp, rsp, r8, r9, r10, r11}
     call        malloc
-    mov         [r15 + 24], rax             ; sprite.frames*
+    mov         [r15 + 20], rax             ; sprite.frames*
     mov         rbx, rax                    ; sprite.frames*
 
     ; initialize loop counters
@@ -105,11 +105,11 @@ _loadSpriteSheet:
 _addFlipSheet:
     ; No stack allocation needed - use existing registers
     mov         r8, rdi                     ; sprite (preserve original)
-    mov         ecx, [r8 + 32]              ; old frameCount
+    mov         ecx, [r8 + 28]              ; old frameCount
 
     ; Calculate new size directly in register
     lea         edx, [rcx + rcx]            ; new frameCount = old * 2
-    mov         rdi, [r8 + 24]              ; current sprite.frames pointer
+    mov         rdi, [r8 + 20]              ; current sprite.frames pointer
     mov         rsi, rdx
     shl         rsi, 4
 
@@ -120,7 +120,7 @@ _addFlipSheet:
     call        realloc
 
     ; Update sprite.frames pointer
-    mov         [r10 + 24], rax
+    mov         [r10 + 20], rax
 
     ; Setup pointers using lea for efficiency
     mov         r8, rax                     ; source = base
@@ -185,7 +185,7 @@ _addFlipSheet:
     jnz         .process_single
 
 .update_count:
-    mov         [r10 + 32], r12d            ; update frameCount
+    mov         [r10 + 28], r12d            ; update frameCount
     ret
 
 

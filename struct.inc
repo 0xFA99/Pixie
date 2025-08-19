@@ -25,12 +25,12 @@ struc Texture
     .format                 dd 0        ;  4 | 16
 }
 
-; 36 bytes
+; 32 bytes
 struc SpriteSheet
 {
-    .texture                Texture     ; 24 |  0
-    .frames                 dq 0        ;  8 | 24 | *Rectangle
-    .frameCount             dd 0        ;  4 | 32
+    .texture                Texture     ; 20 |  0
+    .frames                 dq 0        ;  8 | 20 | *Rectangle
+    .frameCount             dd 0        ;  4 | 28
 }
 
 ; 12 bytes
@@ -55,13 +55,13 @@ struc AnimState
     .status                 Status      ;  4 | 12
 }
 
-; 52 bytes
+; 48 bytes
 struc SpriteEntity
 {
-    .sheet                  SpriteSheet ; 36 |  0
-    .animStates             dq 0        ;  8 | 36 | *AnimState
-    .animStateCount         dd 0        ;  4 | 44
-    .frameDuration          dd 0.0      ;  4 | 48
+    .sheet                  SpriteSheet ; 32 |  0
+    .animStates             dq 0        ;  8 | 32 | *AnimState
+    .animStateCount         dd 0        ;  4 | 40
+    .frameDuration          dd 0.0      ;  4 | 44
 }
 
 ; 36 bytes

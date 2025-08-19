@@ -115,9 +115,9 @@ _updatePlayer:
     mov         r14, [r15]                  ; entity
     mov         r13, [r15 + 8]              ; animState
 
-    movss       xmm3, [r14 + 48]            ; frameDuration
+    movss       xmm3, [r14 + 44]            ; frameDuration
     addss       xmm3, xmm0                  ; + frameTime
-    movss       [r14 + 48], xmm3
+    movss       [r14 + 44], xmm3
 
     mov         eax, 0x3f800000             ; 1.0f
     movd        xmm4, eax
@@ -127,7 +127,7 @@ _updatePlayer:
     ret
 
 .nextFrame:
-    mov     dword [r14 + 48], 0             ; reset frameDuration
+    mov     dword [r14 + 44], 0             ; reset frameDuration
 
     ; player.currentFrame + 1
     mov     eax, [r15 + 56]

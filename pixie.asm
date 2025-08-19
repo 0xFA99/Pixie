@@ -32,9 +32,7 @@ _start:
 
     callWith    [player], _addFlipSheet
 
-    ; Add AnimationState for player
     ; @params: object, state, direction, start, end, speed
-
     ; Animation State (Idle)
     addAnimation [player], STATE_IDLE, DIRECTION_RIGHT, 0, 5, 10.0
     addAnimation [player], STATE_IDLE, DIRECTION_LEFT, 102, 107, 10.0
@@ -56,7 +54,7 @@ _start:
     addAnimation [player], STATE_BREAK, DIRECTION_LEFT, 178, 178, 10.0
 
     ; Set Player animation
-    setAnimation player, STATE_IDLE, DIRECTION_RIGHT
+    setAnimation player, STATE_RUN, DIRECTION_LEFT
 
     ; Set 60 as target FPS
     callWith    60, SetTargetFPS

@@ -21,23 +21,23 @@ _addAnimationSprite:
     or          r14w, dx                    ; r14d = {state, direction}
 
     ; if entity.animationStateCount == 0
-    mov         r15d, [r12 + 44]            ; entity.animationStateCount
+    mov         r15d, [r12 + 40]            ; entity.animationStateCount
     test        r15d, r15d
     jnz         .reallocAnimationState
 
     xor         r11, r11
     mov         rdi, 16                     ; sizeof animState
     call        malloc
-    mov         [r12 + 36], rax             ; entity->animState
+    mov         [r12 + 32], rax             ; entity->animState
     jmp         .addAnimationState
 
 .reallocAnimationState:
     mov         rsi, r15                    ; entity.animationStateCount
     inc         rsi                         ; entity.animationStateCount + 1
     shl         rsi, 4                      ; sizeof animState (16)
-    mov         rdi, [r12 + 36]             ; animState* (base address)
+    mov         rdi, [r12 + 32]             ; animState* (base address)
     call        realloc
-    mov         [r12 + 36], rax             ; animState* (base address)
+    mov         [r12 + 32], rax             ; animState* (base address)
 
 .addAnimationState:
     mov         rsi, r15                    ; entity.animStateCount
@@ -57,7 +57,7 @@ _addAnimationSprite:
     mov         [rbx + 14], r14w            ; direction
 
     inc         r15d                        ; entity.animationStateCount - 1
-    mov         [r12 + 44], r15d
+    mov         [r12 + 40], r15d
 
     pop         rbp
     ret
@@ -69,8 +69,8 @@ _setAnimationSprite:
     mov         r12, rdi                    ; player
     mov         r13, [r12]                  ; player->entity
 
-    mov         r14d, [r13 + 44]            ; entity.animStateCount
-    mov         rbx, [r13 + 36]             ; entity.animStates (base address)
+    mov         r14d, [r13 + 40]            ; entity.animStateCount
+    mov         rbx, [r13 + 32]             ; entity.animStates (base address)
 
 .loop:
     cmp         si, [rbx + 12]              ; compare state
