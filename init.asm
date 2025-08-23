@@ -1,4 +1,8 @@
-; @param rdi, player
+; @func     _initPlayer
+; @desc     initialize player with false hope and broken dreams
+; @param    rdi     -> player
+; @note     sets up player for inevitable suffering and physics abuse
+
 _initPlayer:
     mov         r12, rdi
 
@@ -17,7 +21,11 @@ _initPlayer:
     mov         dword [rdi + 40], 0         ; entity->animStateCount
     ret
 
-; @param rdi, camera
+; @func     _initCamera
+; @desc     initialize camera with a janky focus and a will to live
+; @param    rdi     -> camera
+; @note     sets up camera for a potentially nauseating viewing experience
+
 _initCamera:
     call        GetScreenWidth
     sar         rax, 1                      ; screenWidth / 2
@@ -32,9 +40,8 @@ _initCamera:
     movd        [rdi + 4], xmm1             ; camera.offset.y
 
     ; Setup camera.target
-    mov         qword [rdi + 12], 0.0       ; camera.target {x, y}
+    mov         qword [rdi + 8], 0.0        ; camera.target {x, y}
 
     mov         dword [rdi + 16], 0.0       ; camera.rotation
-    mov         dword [rdi + 20], 1.75      ; camera.zoom
+    mov         dword [rdi + 20], 1.0       ; camera.zoom
     ret
-

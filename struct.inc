@@ -96,3 +96,17 @@ struc Camera
     .zoom                   dd 0.0      ;  4 | 20
 }
 
+; 32 bytes
+struc ParallaxData
+{
+    .texture                Texture     ; 20 |  0
+    .position               Vector      ;  8 | 20
+    .speed                  dd 0.0      ;  4 | 28
+}
+
+; 12 bytes
+struc Parallax
+{
+    .data                   dq 0        ;  8 |  0
+    .count                  dd 0        ;  4 |  8
+}

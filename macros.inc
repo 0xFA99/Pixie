@@ -1,20 +1,25 @@
-macro callWith object, function
-{
-    mov         rdi, object
-    call        function
-}
-
 macro addAsset var, path
 {
     var db "assets/", path, 0x0
 }
 
+macro addParallax parallax, texture, posX, posY, speed
+{
+    mov         rdi, parallax
+    mov         rsi, texture
+    mov         edx, posX
+    mov         ecx, posY
+    mov         eax, speed
+    movd        xmm8, eax
+    call        _addParallax
+}
+
 macro addAnimation entity, state, direction, frameStart, frameEnd, fps
 {
     mov         rdi, entity
-    mov         si, state
-    mov         dx, direction
-    mov         ecx, frameStart
+    mov         rsi, state
+    mov         rdx, direction
+    mov         rcx, frameStart
     mov         r8d, frameEnd
     mov         eax, fps
     movd        xmm8, eax
@@ -24,8 +29,8 @@ macro addAnimation entity, state, direction, frameStart, frameEnd, fps
 macro setAnimation object, state, direction
 {
     mov         rdi, object
-    mov         si, state
-    mov         dx, direction
+    mov         rsi, state
+    mov         rdx, direction
     call        _setAnimationSprite
 }
 

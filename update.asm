@@ -1,32 +1,50 @@
-; @param rdi: camera
-; @param rsi: player
+; @func     _updateCamera
+; @desc     update camera position based on player movement
+; @param    rdi     -> camera
+; @param    rsi     -> player
+; @note     follows player like a creepy ex with commitment issues
+
 _updateCamera:
+    mov         r12, [rsi]                  ; player->entity
+    mov         r12, [r12 + 20]             ; entity.frames
 
-    ; DEBUG
-    ; movsd xmm0, [rsi + 16]
-    ; movsd [rdi + 8], xmm0
-    ; movss xmm0, [rdi + 20]
+    movups      xmm0, [r12 + 8]             ; xmm0 = {width, height, ...}
+    movups      xmm1, [rsi + 16]            ; xmm1 = {pos.x, pos.y, ...}
 
-.checkMaxZoomLimit:
-    movss       xmm1, [camZoomMax]
-    comiss      xmm0, xmm1
-    jbe         .checkMinZoomLimit
+    ; scale {0.0, 0.5, 0, 0}
+    mov         rax, 0x000000003f000000     ; low = 0.0f, high = 0.5
+    movq        xmm2, rax                   ; xmm2 = {0.0, 0.5, 0, 0}
 
-    movss       [rdi + 20], xmm1
-    jmp         .return
+    mulps       xmm0, xmm2                  ; xmm0 = {width*0.0, height*0.5, ...}
+    addps       xmm1, xmm0                  ; xmm1 = {pos.x+half_w, pos.y+height, ...}
 
-.checkMinZoomLimit:
-    movss       xmm1, [camZoomMin]
-    comiss      xmm0, xmm1
-    jae         .return
-
-    movss       [rdi + 20], xmm1
-
-.return:
+    movlps      [rdi + 8], xmm1             ; store {pos.x, pos.y}
     ret
 
-; @param rdi, player
-; @param xmm0, frameTime
+; .checkMaxZoomLimit:
+;     movss       xmm1, [camZoomMax]
+;     comiss      xmm0, xmm1
+;     jbe         .checkMinZoomLimit
+;
+;     movss       [rdi + 20], xmm1
+;     jmp         .return
+;
+; .checkMinZoomLimit:
+;     movss       xmm1, [camZoomMin]
+;     comiss      xmm0, xmm1
+;     jae         .return
+;
+;     movss       [rdi + 20], xmm1
+;
+; .return:
+;     ret
+
+; @func     _updatePlayer
+; @desc     update player physics and animation (pretend math works)
+; @param    rdi     -> player
+; @param    xmm0    -> frameTime
+; @note     applies physics like a broken calculator with anger issues
+
 _updatePlayer:
     mov         r15, rdi                    ; player
     mov         r14, [r15 + 8]              ; player->animState

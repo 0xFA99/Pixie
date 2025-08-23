@@ -1,11 +1,11 @@
-; @func     initSpriteSheet
-; @desc     Bind texture to sprite and define frame grid layout
+; @func     _loadSpriteSheet
+; @desc     Load texture into sprite and slice into frames
 ; @param    rdi     -> sprite entity
 ; @param    rsi     -> texture
-; @param    edx     -> rows count
-; @param    ecx     -> columns count
-; @feat     Turns a boring texture into a  frame-splitting war machine
-; @note     Breaks if you pass garbage, but so do you
+; @param    edx     -> rows
+; @param    ecx     -> columns
+; @note     Explodes if args are trash
+
 _loadSpriteSheet:
     push        rbp
     mov         rbp, rsp
@@ -15,7 +15,7 @@ _loadSpriteSheet:
     mov         r14d, edx                   ; rows
     mov         r13d, ecx                   ; columns
 
-    ; overwrite {rcx, rdx, rsi, rdi, r8, r9, r11}
+    ; load texture, nukes registers on return :)
     call        LoadTexture
 
     ; sprite.frameCount = rows * columns
@@ -27,7 +27,7 @@ _loadSpriteSheet:
     mov         rbx, [r15 + 4]              ; texture {width, height}
 
     ; frame.width = texture.width / columns
-    xor         rdx, rdx
+    ; xor         rdx, rdx                  ; im sure the rdx is 0 :P
     mov         eax, ebx                    ; texture.width
     idiv        r13d                        ; columns
     mov         r12d, eax                   ; frame.width
@@ -37,19 +37,14 @@ _loadSpriteSheet:
     mov         rax, rbx                    ; texture.height
     shr         rax, 32
     idiv        r14d                        ; rows
-    mov         r11d, eax                   ; frame.height
-
-    ; load frame {width, height}
-    cvtsi2ss    xmm2, r12d                  ; xmm2 {frame.width}
-    cvtsi2ss    xmm3, r11d                  ; xmm3 {frame.height}
+    mov         ebx, eax                    ; frame.height
 
     ; allocation memory for all frames
     mov         rdi, rcx                    ; sprite.frameCount
     sal         rdi, 4                      ; sizeof Rectangle (16)
-
-    ; overwrite {rax, rcx, rdx, rsi, rdi, rbp, rsp, r8, r9, r10, r11}
     call        malloc
     mov         [r15 + 20], rax             ; sprite.frames*
+    mov         r11d, ebx                   ; frame.height
     mov         rbx, rax                    ; sprite.frames*
 
     ; initialize loop counters
@@ -62,11 +57,6 @@ _loadSpriteSheet:
 
     xor         r9d, r9d                    ; reset index column
 
-    ; frame.y = row * frame.height
-    mov         eax, r8d                    ; row
-    imul        eax, r11d                   ; frame.height
-    cvtsi2ss    xmm1, eax                   ; xmm1 {frame.y}
-
 .loop_column:
     cmp         r9d, r13d                   ; column >= columns
     jge         .next_row
@@ -75,6 +65,15 @@ _loadSpriteSheet:
     mov         eax, r9d                    ; column
     imul        eax, r12d                   ; frame.width
     cvtsi2ss    xmm0, eax                   ; xmm0 {frame.x}
+
+    ; frame.y = row * frame.height
+    mov         eax, r8d                    ; row
+    imul        eax, r11d                   ; frame.height
+    cvtsi2ss    xmm1, eax                   ; xmm1 {frame.y}
+
+    ; load frame {width, height}
+    cvtsi2ss    xmm2, r12d                  ; xmm2 {frame.width}
+    cvtsi2ss    xmm3, r11d                  ; xmm3 {frame.height}
 
     ; pack xmm0 {x, y, width, height}
     unpcklps    xmm0, xmm1                  ; xmm0 {x, y}
@@ -102,90 +101,55 @@ _loadSpriteSheet:
     pop         rbp
     ret
 
+; @func     _addFlipSheet
+; @desc     duplicate frames and add horizontally flipped copies
+; @param    rdi     -> sprite entity
+; @note     more frames, more pain
+
 _addFlipSheet:
-    ; No stack allocation needed - use existing registers
-    mov         r8, rdi                     ; sprite (preserve original)
-    mov         ecx, [r8 + 28]              ; old frameCount
+    mov         r15, rdi                    ; sprite
+    mov         r14d, [r15 + 28]            ; old frameCount
 
-    ; Calculate new size directly in register
-    lea         edx, [rcx + rcx]            ; new frameCount = old * 2
-    mov         rdi, [r8 + 20]              ; current sprite.frames pointer
-    mov         rsi, rdx
-    shl         rsi, 4
+    ; new frameCount = old frameCount * 2
+    lea         r13d, [r14d * 2]            ; new frameCount
 
-    ; Preserve values we need after realloc in callee-saved registers
-    mov         r10, r8                     ; sprite pointer
-    mov         r11d, ecx                   ; old frameCount
-    mov         r12d, edx                   ; new frameCount
+    mov         rdi, [r15 + 20]             ; entity.sprites (base address)
+
+    ; expand the sprite sheet
+    mov         rsi, r13                    ; new frameCount
+    shl         rsi, 4                      ; sizeof Rectangle (16)
     call        realloc
+    mov         [r15 + 20], rax             ; update sprite.sheet
 
-    ; Update sprite.frames pointer
-    mov         [r10 + 20], rax
+    ; prepare source - destination pointers
+    mov         rbx, rax                    ; entity.sprites (base address)
 
-    ; Setup pointers using lea for efficiency
-    mov         r8, rax                     ; source = base
-    lea         r9, [rax + r11 * 8]
-    lea         r9, [r9 + r11 * 8]
+    mov         r12d, r14d                   ; old frameCount
+    shl         r12, 4                       ; sizeof Rectangle (16)
+    lea         r12, [rbx + r12]              ; base address + old frameCount
 
-    ; Prepare flip mask once in xmm1 (flip width only)
-    mov         eax, MASK_FLIP              ;
-    movd        xmm1, eax
-    pslldq      xmm1, 8
+    ; prepare flip mask in xmm1 for horizontal flipping
+    mov         eax, MASK_FLIP              ; 0x80000000
+    movd        xmm1, eax                   ; xmm1 = {-0.0, 0.0, 0.0, 0.0}
+    pslldq      xmm1, 8                     ; xmm1 = {0.0, 0.0, -0.0, 0.0}
 
-    ; Use remaining count directly in r11d
-    test        r11d, r11d
-    jz          .update_count
+.loop:
+    ; load rectangle from source
+    movaps      xmm0, [rbx]                 ; xmm0 = {x, y, width, height}
 
-    ; Check for unroll opportunity
-    cmp         r11d, 4
-    jl          .process_single
+    ; apply horizontal flip by negating width
+    xorps       xmm0, xmm1                  ; xmm0 = {x, y, -width, height}
 
-.process_batch:
-    ; Process 4 rectangles at once when count >= 4
-    sub         r11d, 4
+    ; store flipped rectangle into destination
+    movaps      [r12], xmm0
 
-    ; Load and flip 4 rectangles in parallel
-    movaps      xmm0, [r8]                 ; rect 0
-    movaps      xmm2, [r8 + 16]            ; rect 1
-    movaps      xmm4, [r8 + 32]            ; rect 2
-    movaps      xmm6, [r8 + 48]            ; rect 3
+    ; advance to next rectangle in source & destination
+    lea         rbx, [rbx + 16]             ; next source
+    lea         r12, [r12 + 16]               ; next destination
 
-    ; Apply horizontal flip (negate width)
-    xorps       xmm0, xmm1
-    xorps       xmm2, xmm1
-    xorps       xmm4, xmm1
-    xorps       xmm6, xmm1
+    dec         r14d                        ; index--
+    jnz         .loop
 
-    ; Store flipped rectangles
-    movaps      [r9], xmm0
-    movaps      [r9 + 16], xmm2
-    movaps      [r9 + 32], xmm4
-    movaps      [r9 + 48], xmm6
-
-    ; Advance pointers by 64 bytes (4 * 16)
-    add         r8, 64
-    add         r9, 64
-
-    ; Continue if we have 4+ rectangles left
-    cmp         r11d, 4
-    jge         .process_batch
-
-.process_single:
-    ; Handle remaining rectangles (0-3)
-    test        r11d, r11d
-    jz          .update_count
-
-    movaps      xmm0, [r8]                 ; load rectangle
-    xorps       xmm0, xmm1                 ; flip width
-    movaps      [r9], xmm0                 ; store flipped
-
-    add         r8, 16                      ; next source
-    add         r9, 16                      ; next dest
-    dec         r11d
-    jnz         .process_single
-
-.update_count:
-    mov         [r10 + 28], r12d            ; update frameCount
+    mov         [r15 + 28], r13d            ; update frameCount
     ret
-
 

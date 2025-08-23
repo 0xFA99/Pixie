@@ -6,7 +6,10 @@ extrn BeginDrawing
 extrn EndDrawing
 extrn ClearBackground
 extrn LoadTexture
+extrn DrawText
+extrn DrawRectangle
 extrn DrawTexturePro
+extrn DrawTextureEx
 extrn GetScreenWidth
 extrn GetScreenHeight
 extrn GetMouseWheelMove
@@ -18,6 +21,7 @@ extrn IsKeyPressed
 
 extrn malloc
 extrn realloc
+extrn printf
 
 STATE_IDLE      equ  0
 STATE_RUN       equ  1
