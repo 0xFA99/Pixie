@@ -1,11 +1,7 @@
-; @func     _loadSpriteSheet
-; @desc     Load texture into sprite and slice into frames
-; @param    rdi     -> sprite entity
-; @param    rsi     -> texture
-; @param    edx     -> rows
-; @param    ecx     -> columns
-; @note     Explodes if args are trash
-
+; rdi     -> sprite entity
+; rsi     -> texture
+; edx     -> rows
+; ecx     -> columns
 _loadSpriteSheet:
     push        rbp
     mov         rbp, rsp
@@ -27,7 +23,7 @@ _loadSpriteSheet:
     mov         rbx, [r15 + 4]              ; texture {width, height}
 
     ; frame.width = texture.width / columns
-    ; xor         rdx, rdx                  ; im sure the rdx is 0 :P
+    xor         rdx, rdx
     mov         eax, ebx                    ; texture.width
     idiv        r13d                        ; columns
     mov         r12d, eax                   ; frame.width
@@ -101,11 +97,7 @@ _loadSpriteSheet:
     pop         rbp
     ret
 
-; @func     _addFlipSheet
-; @desc     duplicate frames and add horizontally flipped copies
-; @param    rdi     -> sprite entity
-; @note     more frames, more pain
-
+; rdi     -> sprite entity
 _addFlipSheet:
     mov         r15, rdi                    ; sprite
     mov         r14d, [r15 + 28]            ; old frameCount
@@ -124,12 +116,12 @@ _addFlipSheet:
     ; prepare source - destination pointers
     mov         rbx, rax                    ; entity.sprites (base address)
 
-    mov         r12d, r14d                   ; old frameCount
-    shl         r12, 4                       ; sizeof Rectangle (16)
-    lea         r12, [rbx + r12]              ; base address + old frameCount
+    mov         r12d, r14d                  ; old frameCount
+    shl         r12, 4                      ; sizeof Rectangle (16)
+    lea         r12, [rbx + r12]            ; base address + old frameCount
 
     ; prepare flip mask in xmm1 for horizontal flipping
-    mov         eax, MASK_FLIP              ; 0x80000000
+    mov         eax, MASK_NEG               ; 0x80000000
     movd        xmm1, eax                   ; xmm1 = {-0.0, 0.0, 0.0, 0.0}
     pslldq      xmm1, 8                     ; xmm1 = {0.0, 0.0, -0.0, 0.0}
 
@@ -145,11 +137,81 @@ _addFlipSheet:
 
     ; advance to next rectangle in source & destination
     lea         rbx, [rbx + 16]             ; next source
-    lea         r12, [r12 + 16]               ; next destination
+    lea         r12, [r12 + 16]             ; next destination
 
     dec         r14d                        ; index--
     jnz         .loop
 
     mov         [r15 + 28], r13d            ; update frameCount
+    ret
+
+; rdi   = entity
+; si    = state
+; dx    = direction
+; ecx   = start
+; r8d   = end
+; xmm0  = frameTime
+_addSpriteAnimation:
+    mov         r12, rdi                    ; entity ptr
+    mov         eax, [r12 + 416]            ; animationStateCount
+    cmp         eax, ANIMATION_STATES_CAP
+    jae         .done
+
+    ; calculate offset for animationStates[count]
+    mov         r13d, eax                   ; parallax.count
+    shl         r13, 4                      ; sizeof AnimState (16)
+    lea         r13, [r12 + r13 + 32]       ; base + index + 32
+
+    ; set animation data
+    mov         [r13], ecx                  ; start
+    mov         [r13 + 4], r8d              ; end
+    movss       [r13 + 8], xmm0             ; frameRate
+    mov         [r13 + 12], si              ; state
+    mov         [r13 + 14], dx              ; direction
+
+    ; check lookup bounds
+    cmp         si, ANIMATION_LOOKUP_CAP
+    jge         .skipLookup
+
+    ; calc lookup index
+    cmp         dx, DIRECTION_RIGHT
+    sete        al
+    movzx       eax, al                     ; col = direction
+    movzx       r8d, si                     ; row = state
+    lea         r8, [rax + r8*2]            ; col + row * nCol
+    mov         [r12 + r8*8 + 288], r13     ; base + offset + r8 * 8
+
+.skipLookup:
+    inc         dword [r12 + 416]           ; count++
+
+.done:
+    ret
+
+_setSpriteAnimation:
+    cmp         si, ANIMATION_LOOKUP_CAP
+    jge         .done
+
+    mov         r12, rdi                    ; player
+    mov         r13, [r12]                  ; player->entity
+
+    cmp         dx, DIRECTION_RIGHT
+    sete        al
+    movzx       eax, al                     ; col = direction
+    movzx       r8d, si                     ; row = state
+    lea         r8, [rax + r8*2]            ; col + row * nCol
+    lea         r14, [r13 + r8*8 + 288]     ; base + offset + r8*8
+
+    mov         r14, [r14]                  ; LOAD pointer from lookup table
+    test        r14, r14                    ; test pointer content (not address)
+    jz          .done
+
+    mov         [r12 + 8], r14              ; store animation pointer to player
+
+    mov         eax, [r14]                  ; get first frame (startFrame)
+    mov         [r12 + 56], eax             ; store currentFrame
+    mov         [r12 + 52], si              ; store state
+    mov         [r12 + 54], dx              ; store direction
+
+.done:
     ret
 

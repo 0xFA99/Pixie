@@ -10,40 +10,61 @@ macro addParallax parallax, texture, posX, posY, speed
     mov         edx, posX
     mov         ecx, posY
     mov         eax, speed
-    movd        xmm8, eax
+    movd        xmm0, eax
     call        _addParallax
 }
 
-macro addAnimation entity, state, direction, frameStart, frameEnd, fps
-{
-    mov         rdi, entity
-    mov         rsi, state
-    mov         rdx, direction
-    mov         rcx, frameStart
-    mov         r8d, frameEnd
-    mov         eax, fps
-    movd        xmm8, eax
-    call        _addAnimationSprite
-}
-
-macro setAnimation object, state, direction
+macro addSpriteAnimation object, state, direction, frameStart, frameEnd, fps
 {
     mov         rdi, object
-    mov         rsi, state
-    mov         rdx, direction
-    call        _setAnimationSprite
+    mov         si, state
+    mov         dx, direction
+    mov         ecx, frameStart
+    mov         r8d, frameEnd
+    mov         eax, fps
+    movd        xmm0, eax
+    call        _addSpriteAnimation
 }
 
-macro clampss reg, min, max
+macro setSpriteAnimation object, state, direction
 {
-    minss       reg, max
-    maxss       reg, min
+    mov         rdi, object
+    mov         si, state
+    mov         dx, direction
+    call        _setSpriteAnimation
 }
 
-macro fabsf reg
+macro startCamera camera
 {
-    mov         eax, MASK_ABS               ; 0x80000000
-    movd        xmm8, eax
-    andps       reg, xmm8
+    sub         rsp, 32                     ; 24 camera + 8 padding
+    movaps      xmm0, [camera]              ; offset(x, y), target(x, y)
+    mov         rax, [camera + 16]          ; rotation, zoom
+    movaps      [rsp], xmm0
+    mov         [rsp + 16], rax
+    call        BeginMode2D
+    add         rsp, 32
+}
+
+macro endCamera
+{
+    call        EndMode2D
+}
+
+macro startScissorMode x, y, width, height
+{
+    mov         edi, -10
+    mov         esi, -10
+
+    mov         edx, [screenWidth]
+    mov         ecx, [screenHeight]
+
+    lea         edx, [edx + 20]
+    lea         ecx, [ecx + 20]
+    call        BeginScissorMode
+}
+
+macro endScissorMode
+{
+    call        EndScissorMode
 }
 

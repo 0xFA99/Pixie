@@ -55,13 +55,14 @@ struc AnimState
     .status                 Status      ;  4 | 12
 }
 
-; 48 bytes
+; 424 bytes
 struc SpriteEntity
 {
-    .sheet                  SpriteSheet ; 32 |  0
-    .animStates             dq 0        ;  8 | 32 | *AnimState
-    .animStateCount         dd 0        ;  4 | 40
-    .frameDuration          dd 0.0      ;  4 | 44
+    .sheet                  SpriteSheet                     ;  32 |   0
+    .animationStates        db ANIMATION_STATES_CAP * 16    ; 256 |  32
+    .animationLookUp        dq ANIMATION_LOOKUP_CAP * 2     ; 128 | 288
+    .animationCount         dd 0                            ;   4 | 416
+    .frameDuration          dd 0.0                          ;   4 | 420
 }
 
 ; 36 bytes
@@ -76,7 +77,7 @@ struc Movement
     .breakThreshold         dd 0.0      ;  4 | 32
 }
 
-; 61 bytes (no need to align now)
+; 61 bytes (no need to align for now :P)
 struc Player
 {
     .entity                 dq 0        ;  8 |  0 | *SpriteEntity
@@ -104,9 +105,10 @@ struc ParallaxData
     .speed                  dd 0.0      ;  4 | 28
 }
 
-; 12 bytes
+; 516 bytes
 struc Parallax
 {
-    .data                   dq 0        ;  8 |  0
-    .count                  dd 0        ;  4 |  8
+    .data                   dq PARALLAX_LAYER_CAP * 32 ; 512 |  0
+    .count                  dd 0        ;  4 | 512
 }
+
