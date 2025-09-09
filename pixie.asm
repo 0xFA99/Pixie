@@ -57,18 +57,17 @@ _start:
     ; Set player animation
     setSpriteAnimation player, STATE_IDLE, DIRECTION_RIGHT
 
-    ; Init Parallax
+    ; [INFO] Parallax
     ; @params: parallax*, file*, posX, posY, speed
-    ; [TODO] UpdateParallax
-    addParallax parallax, parallax_background,      0.0,    -200.0,     1.0
-    addParallax parallax, parallax_cloud_1,         0.0,    -200.0,     1.0
-    addParallax parallax, parallax_cloud_2,         0.0,    -200.0,     1.0
-    addParallax parallax, parallax_cloud_3,         0.0,    -200.0,     1.0
-    addParallax parallax, parallax_props_clouds,    0.0,    -200.0,     1.0
-    addParallax parallax, parallax_back_forest_1,   0.0,    -200.0,     1.0
-    addParallax parallax, parallax_back_forest_2,   0.0,    -200.0,     1.0
-    addParallax parallax, parallax_back_tree_1,     0.0,    -200.0,     1.0
-    addParallax parallax, parallax_back_tree_2,     0.0,    -200.0,     1.0
+    addParallax parallax, parallax_background,      0.0,    -200.0,     0.05
+    addParallax parallax, parallax_cloud_1,         0.0,    -200.0,     0.08
+    addParallax parallax, parallax_cloud_2,         0.0,    -200.0,     0.10
+    addParallax parallax, parallax_cloud_3,         0.0,    -200.0,     0.12
+    addParallax parallax, parallax_props_clouds,    0.0,    -200.0,     0.15
+    addParallax parallax, parallax_back_forest_1,   0.0,    -200.0,     0.25
+    addParallax parallax, parallax_back_forest_2,   0.0,    -200.0,     0.35
+    addParallax parallax, parallax_back_tree_1,     0.0,    -200.0,     0.55
+    addParallax parallax, parallax_back_tree_2,     0.0,    -200.0,     0.75
 
     ; Set target FPS
     mov         rdi, 60
@@ -102,12 +101,23 @@ _start:
     movss       xmm2, [frameTime]
     call        _updateParallax
 
+; .debug:
+;     mov         rdi, d
+;     mov         eax, dword [parallax + 4]
+;     cvtsi2ss    xmm2, eax
+;     cvtss2sd    xmm0, dword [parallax + 20]
+;     addss       xmm0, xmm2
+;     cvtss2sd    xmm0, xmm0
+;     cvtss2sd    xmm1, dword [player + 16]
+;     mov         eax, 1
+;     call        printf
+
     call        BeginDrawing
 
     mov         rdi, 0xFF181818
     call        ClearBackground
 
-    ; startScissorMode
+    startScissorMode
 
     lea         rdi, [camera]
     startCamera rdi
@@ -119,7 +129,7 @@ _start:
     call        _renderPlayer
 
     endCamera
-    ; endScissorMode
+    endScissorMode
 
     call        EndDrawing
     jmp         .gameLoop
@@ -164,7 +174,7 @@ screenWidth     dd 800
 screenHeight    dd 400
 title           db "Pixie", 0x0
 
-d               db "%d", 0xa, 0x0
+; d               db "%f | %f", 0xa, 0x0
 
 section '.note.GNU-stack'
 

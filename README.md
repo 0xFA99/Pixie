@@ -32,12 +32,6 @@ To clean up:
 $ make clean
 ```
 
-## Whats Cookin on `dev` branch???
-- Replacing all mallocs with `mmap`, because I have decided to become a **syscall hermit.**
-- Using SIMD to move 2 floats at once, just so I can save **0.00001% CPU**, but feel like a god for doing it.
-- Planning to write my own memory allocator because libc was giving me trust issues.
-- Considering porting the whole game to run in ring 0 for "maximum vibes"
-
 ## TO-DO
 - [x] Draw Sprite
 - [x] Add Camera2D

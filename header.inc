@@ -42,6 +42,9 @@ DIRECTION_RIGHT         equ  1
 KEY_RIGHT               equ 262
 KEY_LEFT                equ 263
 KEY_UP                  equ 265
+KEY_Z                   equ 90
+KEY_X                   equ 88
+KEY_C                   equ 67
 
 ANIMATION_STATES_CAP    equ 16
 ANIMATION_LOOKUP_CAP    equ 8

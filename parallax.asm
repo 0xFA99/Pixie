@@ -32,21 +32,8 @@ _addParallax:
     pop         rbp
     ret
 
-public _updateParallax
 _updateParallax:
     mov         r12, rdi
-
-    ; mov         edi, KEY_RIGHT
-    ; call        IsKeyDown
-    ; movzx       r14d, al
-
-    ; mov         edi, KEY_LEFT
-    ; call        IsKeyDown
-    ; movzx       r15d, al
-
-    ; sub         r14d, r15d
-    ; test        r14d, r14d
-    ; jz          .done
 
     xor         ecx, ecx                    ; index
     mov         r13d, [r12 + 512]           ; parallax.count
@@ -56,47 +43,39 @@ _updateParallax:
     shl         rax, 5
     lea         rbx, [r12 + rax]
 
-    ; xmm0 = velocity.x
-    ; xmm1 = player.pos.x
+    ; xmm0 = velocityX
+    ; xmm1 = playerPosX
     ; xmm2 = frameTime
-;
-;     movss       xmm3, [rbx + 20]            ; parallax.position.x
-;     movss       xmm4, [rbx + 4]             ; parallax.texture.width
-;
-;     ; offset right
-;     movss       xmm5, xmm3
-;     addss       xmm5, xmm4
-;
-;     ; offset left
-;     movss       xmm6, xmm3
-;     subss       xmm6, xmm4
-;
-;     ; if (playerPosX >= offsetRight)
-;     comiss      xmm1, xmm5
-;     jb          .checkLeft                  ; if player < offsetRight, skip
-;
-;     movss       [rbx + 20], xmm5
-;     jmp         .afterSnap
-;
-; .checkLeft:
-;     ; if (playerPosX <= offsetLeft)
-;     comiss      xmm1, xmm6
-;     ja          .afterSnap                  ; if player > offsetLeft, skip
-;
-;     movss       [rbx + 20], xmm6
-;
-; .afterSnap:
-;
-    ; apply velocity: pos.x -= vel * speed * dt
-    ; movss       xmm3, [rbx + 20]            ; pos.x
-    ; movss       xmm4, [rbx + 28]            ; speed
-    ; mulss       xmm0, xmm4                  ; vel * speed
-    ; mulss       xmm0, xmm2                  ; * dt
-    ; addss       xmm3, xmm0                  ; pos.x - result
-    mov         eax, MASK_NEG
-    movd        xmm2, eax
-    xorps       xmm1, xmm2
-    movss       [rbx + 20], xmm1
+
+    movss       xmm3, [rbx+20]        ; parallax.position.x
+    mov         eax, dword [rbx + 4]
+    cvtsi2ss    xmm4, eax
+
+    movss       xmm5, xmm3
+    addss       xmm5, xmm4            ; offsetRight
+
+    movss       xmm6, xmm3
+    subss       xmm6, xmm4            ; offsetLeft
+
+    ; if (playerPosX >= offsetRight)
+    comiss      xmm1, xmm5
+    jb          .checkLeft
+    movss       xmm3, xmm5
+    jmp         .apply
+
+.checkLeft:
+    ; else if (playerPosX <= offsetLeft)
+    comiss      xmm1, xmm6
+    ja          .apply
+    movss       xmm3, xmm6
+
+.apply:
+    ; pos -= velocityX * speed * frameTime
+    movss       xmm7, [rbx+28]
+    mulss       xmm7, xmm0
+    mulss       xmm7, xmm2
+    subss       xmm3, xmm7
+    movss       [rbx+20], xmm3
 
     inc         ecx
     cmp         ecx, r13d
@@ -112,12 +91,15 @@ _renderParallax:
     xor         r12d, r12d                  ; index = 0
     mov         r13d, [rdi + 512]           ; parallax.count
 
-    mov         rbx, rdi                    ; base = parallax
+    mov         rbx, rdi                    ; base
+
+    mov         eax, 0x3f800000             ; scale = 1.0
+    movd        xmm11, eax
 
 .loop:
     mov         eax, r12d                   ; index
-    shl         rax, 5                      ; sizeof ParallaxData (36_
-    lea         r14, [rbx + rax]            ; base[count]
+    shl         rax, 5                      ; sizeof ParallaxData (36)
+    lea         r14, [rbx + rax]            ; base[offset]
 
     sub         rsp, 32
     movaps      xmm0, [r14]                 ; texture {id, w, h, f, m }
@@ -125,50 +107,36 @@ _renderParallax:
     movaps      [rsp], xmm0
     mov         [rsp + 16], eax
 
-    mov         eax, [r14 + 4]             ; parallax.width
+    mov         eax, [r14 + 4]              ; parallax.width
+    cvtsi2ss    xmm8, eax
     sar         eax, 1
-    cvtsi2ss    xmm1, eax
+    cvtsi2ss    xmm9, eax                   ; parallax.width / 2.0
 
     movq        xmm0, [r14 + 20]            ; parallax.position
-    subss       xmm0, xmm1
-    movaps      xmm8, xmm0
-
+    subss       xmm0, xmm9
+    movaps      xmm10, xmm0
     pxor        xmm1, xmm1                  ; rotation = 0.0
-
-    mov         eax, 0x3f800000             ; scale = 1.0
-    movd        xmm2, eax
-
+    movss       xmm2, xmm11
     mov         edi, 0xFFFFFFFF
     call        DrawTextureEx
 
-    movaps      xmm0, xmm8
-    cvtsi2ss    xmm1, [r14 + 4]
-    subss       xmm0, xmm1
-
+    movaps      xmm0, xmm10
+    addss       xmm0, xmm8
     pxor        xmm1, xmm1                  ; rotation = 0.0
-
-    mov         eax, 0x3f800000             ; scale = 1.0
-    movd        xmm2, eax
-
+    movss       xmm2, xmm11
     mov         edi, 0xFFFFFFFF
     call        DrawTextureEx
 
-    movaps      xmm0, xmm8
-    cvtsi2ss    xmm1, [r14 + 4]
-    addss       xmm0, xmm1
-
+    movaps      xmm0, xmm10
+    subss       xmm0, xmm8
     pxor        xmm1, xmm1                  ; rotation = 0.0
-
-    mov         eax, 0x3f800000             ; scale = 1.0
-    movd        xmm2, eax
-
+    movss       xmm2, xmm11
     mov         edi, 0xFFFFFFFF
     call        DrawTextureEx
 
     add         rsp, 32
 
     inc         r12d
-
     cmp         r12d, r13d
     jl          .loop
 
