@@ -13,9 +13,14 @@ It's a rebellion against modern software bloat.
 - [FASM](https://flatassembler.net/) - because who needs sanity
 - [Raylib](https://www.raylib.com/) - one of the few C libs that didn't gaslight me (yet)
 - `ld` (GNU linker)
+<<<<<<< HEAD
 - `make` - it builds things. Sometimes.
 - A strong will to live (optional, but recommended)
 
+=======
+- `make` - cause I like to pretend things are automated
+- optional: a therapist (for debug trauma)
+>>>>>>> origin/main
 ---
 
 ### Build & Run
@@ -51,4 +56,7 @@ By running it, you agree that:
 - understanding this code may unlock ancient knowledge or possibly just migrains
 
 ## Use freely, suffer responsibly.
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/main
