@@ -101,17 +101,6 @@ _start:
     movss       xmm2, [frameTime]
     call        _updateParallax
 
-; .debug:
-;     mov         rdi, d
-;     mov         eax, dword [parallax + 4]
-;     cvtsi2ss    xmm2, eax
-;     cvtss2sd    xmm0, dword [parallax + 20]
-;     addss       xmm0, xmm2
-;     cvtss2sd    xmm0, xmm0
-;     cvtss2sd    xmm1, dword [player + 16]
-;     mov         eax, 1
-;     call        printf
-
     call        BeginDrawing
 
     mov         rdi, 0xFF181818
@@ -174,7 +163,4 @@ screenWidth     dd 800
 screenHeight    dd 400
 title           db "Pixie", 0x0
 
-; d               db "%f | %f", 0xa, 0x0
-
 section '.note.GNU-stack'
-

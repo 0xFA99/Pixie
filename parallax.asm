@@ -32,56 +32,50 @@ _addParallax:
     pop         rbp
     ret
 
-_updateParallax:
-    mov         r12, rdi
+_updateParallax: 
+    mov         r12,  rdi                   ; store pointer
+    xor         ecx,  ecx                   ; index = 0
+    mov         r13d,  [r12 + 512]          ; parallax.count
 
-    xor         ecx, ecx                    ; index
-    mov         r13d, [r12 + 512]           ; parallax.count
+.loop: 
+    mov         eax,  ecx
+    shl         rax,  5                     ; index * 32
+    lea         rbx,  [r12 + rax]           ; base[index]
 
-.loop:
-    mov         eax, ecx
-    shl         rax, 5
-    lea         rbx, [r12 + rax]
+    movss       xmm3,  [rbx+20]             ; parallax.position.x
+    mov         eax,  dword [rbx + 4]
+    cvtsi2ss    xmm4,  eax                  ; width/2
 
-    ; xmm0 = velocityX
-    ; xmm1 = playerPosX
-    ; xmm2 = frameTime
+    movss       xmm5,  xmm3
+    addss       xmm5,  xmm4                 ; offsetRight
 
-    movss       xmm3, [rbx+20]        ; parallax.position.x
-    mov         eax, dword [rbx + 4]
-    cvtsi2ss    xmm4, eax
-
-    movss       xmm5, xmm3
-    addss       xmm5, xmm4            ; offsetRight
-
-    movss       xmm6, xmm3
-    subss       xmm6, xmm4            ; offsetLeft
+    movss       xmm6,  xmm3
+    subss       xmm6,  xmm4                 ; offsetLeft
 
     ; if (playerPosX >= offsetRight)
-    comiss      xmm1, xmm5
+    comiss      xmm1,  xmm5
     jb          .checkLeft
-    movss       xmm3, xmm5
+    movss       xmm3,  xmm5
     jmp         .apply
 
-.checkLeft:
+.checkLeft: 
     ; else if (playerPosX <= offsetLeft)
-    comiss      xmm1, xmm6
+    comiss      xmm1,  xmm6
     ja          .apply
-    movss       xmm3, xmm6
+    movss       xmm3,  xmm6
 
-.apply:
+.apply: 
     ; pos -= velocityX * speed * frameTime
-    movss       xmm7, [rbx+28]
-    mulss       xmm7, xmm0
-    mulss       xmm7, xmm2
-    subss       xmm3, xmm7
-    movss       [rbx+20], xmm3
+    movss       xmm7,  [rbx+28]              ; load speed
+    mulss       xmm7,  xmm0                  ; * velocityX
+    mulss       xmm7,  xmm2                  ; * frameTime
+    subss       xmm3,  xmm7
+    movss       [rbx+20],  xmm3              ; store result
 
     inc         ecx
-    cmp         ecx, r13d
+    cmp         ecx,  r13d
     jl          .loop
 
-.done:
     ret
 
 _renderParallax:
@@ -90,19 +84,17 @@ _renderParallax:
 
     xor         r12d, r12d                  ; index = 0
     mov         r13d, [rdi + 512]           ; parallax.count
-
     mov         rbx, rdi                    ; base
-
     mov         eax, 0x3f800000             ; scale = 1.0
     movd        xmm11, eax
 
-.loop:
+.loop: 
     mov         eax, r12d                   ; index
-    shl         rax, 5                      ; sizeof ParallaxData (36)
+    shl         rax, 5                      ; sizeof ParallaxData (32)
     lea         r14, [rbx + rax]            ; base[offset]
 
-    sub         rsp, 32
-    movaps      xmm0, [r14]                 ; texture {id, w, h, f, m }
+    sub         rsp, 32                     ; 20 texture + 12 padding
+    movaps      xmm0, [r14]                 ; texture {id, w, h, f, m}
     mov         eax, [r14 + 16]
     movaps      [rsp], xmm0
     mov         [rsp + 16], eax
@@ -116,31 +108,32 @@ _renderParallax:
     subss       xmm0, xmm9
     movaps      xmm10, xmm0
     pxor        xmm1, xmm1                  ; rotation = 0.0
-    movss       xmm2, xmm11
-    mov         edi, 0xFFFFFFFF
+    movss       xmm2, xmm11                 ; scale
+    mov         edi, 0xFFFFFFFF             ; color (white)
     call        DrawTextureEx
 
+    ; Draw right copy
     movaps      xmm0, xmm10
     addss       xmm0, xmm8
     pxor        xmm1, xmm1                  ; rotation = 0.0
-    movss       xmm2, xmm11
-    mov         edi, 0xFFFFFFFF
+    movss       xmm2, xmm11                 ; scale
+    mov         edi, 0xFFFFFFFF             ; color
     call        DrawTextureEx
 
+    ; Draw left copy
     movaps      xmm0, xmm10
     subss       xmm0, xmm8
     pxor        xmm1, xmm1                  ; rotation = 0.0
-    movss       xmm2, xmm11
-    mov         edi, 0xFFFFFFFF
+    movss       xmm2, xmm11                 ; scale
+    mov         edi, 0xFFFFFFFF             ; color
     call        DrawTextureEx
 
     add         rsp, 32
 
-    inc         r12d
-    cmp         r12d, r13d
+    inc         r12d                        ; index++
+    cmp         r12d, r13d                  ; compare with count
     jl          .loop
 
 .done:
     pop         rbp
     ret
-
