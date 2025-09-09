@@ -1,111 +1,70 @@
-; Make sure allocate 16 bytes first
-macro LoadTextureData texture
+macro addAsset var, path
 {
-    mov rcx, rsp
-    mov rax, [texture]
-    mov rdx, [texture + 8]
-    mov [rcx], rax
-    mov [rcx + 8], rdx
-    mov eax, [texture + 16]
-    mov [rcx + 16], eax
+    var db "assets/", path, 0x0
 }
 
-macro AddAnimationState object, state, direction, first, last, FPS
+macro addParallax parallax, texture, posX, posY, speed
 {
-    lea rdi, [object]
-    mov esi, state
-    mov edx, direction
-    mov ecx, first
-    mov r8d, last
-    mov r9d, FPS
-    call _AddAnimationState
+    mov         rdi, parallax
+    mov         rsi, texture
+    mov         edx, posX
+    mov         ecx, posY
+    mov         eax, speed
+    movd        xmm0, eax
+    call        _addParallax
 }
 
-; ==============================================================================
-;                              PARALLAX BACKGROUND
-; ==============================================================================
-macro ScrollingParallax layer, speed
+macro addSpriteAnimation object, state, direction, frameStart, frameEnd, fps
 {
-    mov eax, speed
-    movd xmm1, eax
-    movss xmm0, [layer]
-    addss xmm0, xmm1
-    movss [layer], xmm0
+    mov         rdi, object
+    mov         si, state
+    mov         dx, direction
+    mov         ecx, frameStart
+    mov         r8d, frameEnd
+    mov         eax, fps
+    movd        xmm0, eax
+    call        _addSpriteAnimation
 }
 
-macro CheckParallaxLimit layer, scroll, nextLabel, direction
+macro setSpriteAnimation object, state, direction
 {
-    cvtsi2ss xmm0, [layer + 4]
-    addss xmm0, xmm0
-
-    if direction eq DIRECTION_LEFT
-        mov eax, -0.0
-        movd xmm1, eax
-        xorps xmm0, xmm1
-    end if
-
-    movss xmm1, [scroll]
-
-    if direction eq DIRECTION_LEFT
-        comiss xmm0, xmm1
-    else
-        comiss xmm1, xmm0
-    end if
-
-    jb nextLabel
-
-    pxor xmm0, xmm0
-    movss [scroll], xmm0
+    mov         rdi, object
+    mov         si, state
+    mov         dx, direction
+    call        _setSpriteAnimation
 }
 
-; Make sure allocate 16 bytes first
-macro DrawParallaxLayer layer, scroll, posY, scale, order
+macro startCamera camera
 {
-    cvtsi2ss xmm0, [layer + 4]
+    sub         rsp, 32                     ; 24 camera + 8 padding
+    movaps      xmm0, [camera]              ; offset(x, y), target(x, y)
+    mov         rax, [camera + 16]          ; rotation, zoom
+    movaps      [rsp], xmm0
+    mov         [rsp + 16], rax
+    call        BeginMode2D
+    add         rsp, 32
+}
 
-    if order eq BACK
-        addss xmm0, xmm0
+macro endCamera
+{
+    call        EndMode2D
+}
 
-        mov eax, -0.0
-        movd xmm1, eax
-        xorps xmm0, xmm1
+macro startScissorMode x, y, width, height
+{
+    mov         edi, -10
+    mov         esi, -10
 
-        movss xmm1, [scroll]
-        addss xmm0, xmm1
-    else if order eq MIDDLE
-        movss xmm0, [scroll]
-    else
-        addss xmm0, xmm0
+    mov         edx, [screenWidth]
+    mov         ecx, [screenHeight]
 
-        movss xmm1, [scroll]
-        addss xmm0, xmm1
-    end if
+    lea         edx, [edx + 20]
+    lea         ecx, [ecx + 20]
+    call        BeginScissorMode
+}
 
-    mov eax, posY
-    movd xmm1, eax
-
-    movss [rbp - 4], xmm1
-    movss [rbp - 8], xmm0
-
-    ; Texture
-    sub rsp, 16
-    LoadTextureData layer
-
-    ; Position
-    mov rax, [rbp - 8]
-    movq xmm0, rax
-
-    ; Rotation
-    pxor xmm1, xmm1
-
-    ; Scale
-    mov eax, scale
-    movd xmm2, eax
-
-    ; Color
-    mov edi, -1
-
-    call DrawTextureEx
-    add rsp, 16
+macro endScissorMode
+{
+    call        EndScissorMode
 }
 

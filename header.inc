@@ -1,49 +1,55 @@
-; ======================
-;        Raylib
-; ======================
-extrn SetTargetFPS
 extrn InitWindow
 extrn CloseWindow
+extrn SetTargetFPS
 extrn WindowShouldClose
-extrn GetScreenWidth
-extrn GetScreenHeight
-extrn GetFrameTime
 extrn BeginDrawing
 extrn EndDrawing
-extrn BeginMode2D
-extrn EndMode2D
 extrn ClearBackground
 extrn LoadTexture
+extrn DrawText
+extrn DrawRectangle
 extrn DrawTexturePro
 extrn DrawTextureEx
-extrn DrawText
-extrn IsKeyDown
+extrn GetScreenWidth
+extrn GetScreenHeight
 extrn GetMouseWheelMove
-extrn GetFPS
+extrn BeginMode2D
+extrn EndMode2D
+extrn BeginScissorMode
+extrn EndScissorMode
+extrn GetFrameTime
+extrn IsKeyDown
+extrn IsKeyPressed
 
-; ======================
-;        RayMath 
-; ======================
-extrn Vector2Add
-extrn Vector2Scale
-
-; ======================
-;        STDLIB 
-; ======================
-extrn printf
+extrn memset
 extrn malloc
 extrn realloc
-extrn getchar
-extrn snprintf
+extrn printf
 
-; ======================
-;         PIXIE 
-; ======================
-STATE_IDLE      equ 0
-STATE_RUN       equ 1
-STATE_JUMP      equ 2
-STATE_FALL      equ 3
+FALSE                   equ 0
+TRUE                    equ 1
 
-DIRECTION_LEFT  equ 0
-DIRECTION_RIGHT equ 1
+STATE_IDLE              equ  0
+STATE_RUN               equ  1
+STATE_JUMP              equ  2
+STATE_FALL              equ  3
+STATE_BREAK             equ  4
+STATE_COUNT             equ  5
+
+DIRECTION_LEFT          equ -1
+DIRECTION_RIGHT         equ  1
+
+KEY_RIGHT               equ 262
+KEY_LEFT                equ 263
+KEY_UP                  equ 265
+KEY_Z                   equ 90
+KEY_X                   equ 88
+KEY_C                   equ 67
+
+ANIMATION_STATES_CAP    equ 16
+ANIMATION_LOOKUP_CAP    equ 8
+PARALLAX_LAYER_CAP      equ 16
+
+MASK_NEG                equ 0x80000000
+MASK_ABS                equ 0x7FFFFFFF
 

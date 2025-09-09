@@ -1,231 +1,217 @@
-; ============== PARAMETERS ==============
-; [rbp -  8]    = file
-; [rbp - 12]    = rows
-; [rbp - 16]    = columns
+; rdi     -> sprite entity
+; rsi     -> texture
+; edx     -> rows
+; ecx     -> columns
+_loadSpriteSheet:
+    push        rbp
+    mov         rbp, rsp
 
-; ============= SPRITESHEET ==============
-; [rbp - 20]    = Texture.format
-; [rbp - 24]    = Texture.mipmaps
-; [rbp - 28]    = Texture.height
-; [rbp - 32]    = Texture.width
-; [rbp - 36]    = Texture.id
-; [rbp - 44]    = Frames*
-; [rbp - 48]    = FrameCount
+    ; backup arguments
+    mov         r15, rdi                    ; sprite
+    mov         r14d, edx                   ; rows
+    mov         r13d, ecx                   ; columns
 
-; ============== VARIABLES ===============
-; [rbp - 52]    = width
-; [rbp - 56]    = height
-; [rbp - 60]    = counter
-; [rbp - 64]    = index row
-; [rbp - 68]    = index column
+    ; load texture, nukes registers on return :)
+    call        LoadTexture
 
-_LoadSpriteSheet:
-    push rbp
-    mov rbp, rsp
-    sub rsp, 80
+    ; sprite.frameCount = rows * columns
+    mov         eax, r14d                   ; rows
+    imul        eax, r13d                   ; columns
+    mov         ecx, eax                    ; sprite.frameCount (backup)
+    mov         [r15 + 28], eax             ; sprite.frameCount
 
-    mov [rbp - 8], rdi
-    mov [rbp - 12], esi
-    mov [rbp - 16], edx
+    mov         rbx, [r15 + 4]              ; texture {width, height}
 
-    lea rdi, [rbp - 36]
-    mov rsi, [rbp - 8]
-    call LoadTexture
+    ; frame.width = texture.width / columns
+    xor         rdx, rdx
+    mov         eax, ebx                    ; texture.width
+    idiv        r13d                        ; columns
+    mov         r12d, eax                   ; frame.width
 
-    ; FrameCount = rows * columns
-    mov eax, [rbp - 12]
-    imul eax, [rbp - 16]
-    mov [rbp - 48], eax
+    ; frame.height = texture.height / rows
+    xor         rdx, rdx
+    mov         rax, rbx                    ; texture.height
+    shr         rax, 32
+    idiv        r14d                        ; rows
+    mov         ebx, eax                    ; frame.height
 
-    ; Texture.width / columns
-    mov eax, [rbp - 32]
-    mov ecx, [rbp - 16]
-    xor edx, edx
-    idiv ecx
-    mov [rbp - 52], eax
+    ; allocation memory for all frames
+    mov         rdi, rcx                    ; sprite.frameCount
+    sal         rdi, 4                      ; sizeof Rectangle (16)
+    call        malloc
+    mov         [r15 + 20], rax             ; sprite.frames*
+    mov         r11d, ebx                   ; frame.height
+    mov         rbx, rax                    ; sprite.frames*
 
-    ; Texture.height / rows
-    mov eax, [rbp - 28]
-    mov ecx, [rbp - 12]
-    xor edx, edx
-    idiv ecx
-    mov [rbp - 56], eax
+    ; initialize loop counters
+    xor         ecx, ecx                    ; counter
+    xor         r8d, r8d                    ; index row
 
-    ; malloc(sizeof(Rectangle) * FrameCount)
-    ; Store into frames*
-    mov eax, [rbp - 48]
-    imul eax, 16
-    mov rdi, rax
-    call malloc
-    mov [rbp - 44], rax
+.loop_row:
+    cmp         r8d, r14d                   ; row >= rows
+    jge         .done
 
-    mov dword [rbp - 64], 0
+    xor         r9d, r9d                    ; reset index column
 
-.L4:
-    mov dword [rbp - 68], 0
-    jmp .L2
+.loop_column:
+    cmp         r9d, r13d                   ; column >= columns
+    jge         .next_row
 
-.L3:
-    ; Frame.x = column * width
-    mov edx, [rbp - 68]
-    imul edx, [rbp - 52]
-    cvtsi2ss xmm0, edx
+    ; frame.x = column * frame.width
+    mov         eax, r9d                    ; column
+    imul        eax, r12d                   ; frame.width
+    cvtsi2ss    xmm0, eax                   ; xmm0 {frame.x}
 
-    ; Frame.y = row * height
-    mov edx, [rbp - 64]
-    imul edx, [rbp - 56]
-    cvtsi2ss xmm1, edx
+    ; frame.y = row * frame.height
+    mov         eax, r8d                    ; row
+    imul        eax, r11d                   ; frame.height
+    cvtsi2ss    xmm1, eax                   ; xmm1 {frame.y}
 
-    ; Frame.width = width
-    mov edx, [rbp - 52]
-    cvtsi2ss xmm2, edx
+    ; load frame {width, height}
+    cvtsi2ss    xmm2, r12d                  ; xmm2 {frame.width}
+    cvtsi2ss    xmm3, r11d                  ; xmm3 {frame.height}
 
-    ; Frame.height = height
-    mov edx, [rbp - 56]
-    cvtsi2ss xmm3, edx
+    ; pack xmm0 {x, y, width, height}
+    unpcklps    xmm0, xmm1                  ; xmm0 {x, y}
+    unpcklps    xmm2, xmm3                  ; xmm2 {width, height}
+    shufps      xmm0, xmm2, 01000100b       ; xmm0 {x, y, width, height}
 
-    mov rdx, [rbp - 44]
-    mov eax, [rbp - 60]
-    imul eax, 16
-    cdqe
-    add rax, rdx
+    ; store to sprite.frames[counter]
+    mov         eax, ecx                    ; counter
+    shl         rax, 4                      ; sizeof Rectangle (16)
+    lea         rdi, [rbx + rax]            ; sprite.frames[counter]
 
-    movss [rax], xmm0
-    movss [rax + 4], xmm1
-    movss [rax + 8], xmm2
-    movss [rax + 12], xmm3
-    
-    add dword [rbp - 60], 1
-    add dword [rbp - 68], 1
-    
-.L2:
-    mov eax, [rbp - 68]
-    cmp eax, [rbp - 16]
-    jl .L3
+    ; store all data {x, y, width, height}
+    movaps      [rdi], xmm0
 
-    add dword [rbp - 64], 1
+    ; increase counter and index column
+    inc         ecx                         ; counter++
+    inc         r9d                         ; index column++
+    jmp         .loop_column
 
-.L1:
-    mov eax, [rbp - 64]
-    cmp eax, [rbp - 12]
-    jl .L4
+.next_row:
+    inc         r8d                         ; index row++
+    jmp         .loop_row
 
-    ; Return SpriteSheet
-    ; Texture
-    mov rax, [rbp - 36]
-    mov rdx, [rbp - 28]
-    mov rcx, [rbp - 20]
-    mov [rbp + 16], rax
-    mov [rbp + 24], rdx
-    mov [rbp + 32], rcx
-
-    ; Frames*
-    mov rax, [rbp - 44]
-    mov [rbp + 36], rax
-
-    ; FrameCount
-    mov rax, [rbp - 48]
-    mov [rbp + 44], rax
-
-    add rsp, 80
-    pop rbp
+.done:
+    pop         rbp
     ret
 
-; ============== PARAMETERS ==============
-; [rbp - 8]     = Player*
+; rdi     -> sprite entity
+_addFlipSheet:
+    mov         r15, rdi                    ; sprite
+    mov         r14d, [r15 + 28]            ; old frameCount
 
-; ============== VARIABLES ===============
-; [rbp - 12]    = Original FrameCount
-; [rbp - 16]    = New FrameCount
-; [rbp - 20]    = Index
-; [rbp - 36]    = Temporary Rectangle
+    ; new frameCount = old frameCount * 2
+    lea         r13d, [r14d * 2]            ; new frameCount
 
-_AddFlipSpriteSheet:
-    push rbp
-    mov rbp, rsp
-    sub rsp, 48
+    mov         rdi, [r15 + 20]             ; entity.sprites (base address)
 
-    mov [rbp - 8], rdi
+    ; expand the sprite sheet
+    mov         rsi, r13                    ; new frameCount
+    shl         rsi, 4                      ; sizeof Rectangle (16)
+    call        realloc
+    mov         [r15 + 20], rax             ; update sprite.sheet
 
-    mov rax, [rbp - 8]
-    mov rax, [rax]
-    mov eax, [rax + 32]
-    mov [rbp - 12], eax
+    ; prepare source - destination pointers
+    mov         rbx, rax                    ; entity.sprites (base address)
 
-    add eax, eax
-    mov [rbp - 16], eax
+    mov         r12d, r14d                  ; old frameCount
+    shl         r12, 4                      ; sizeof Rectangle (16)
+    lea         r12, [rbx + r12]            ; base address + old frameCount
 
-    mov rax, [rbp - 8]
-    mov rax, [rax]
-    mov rdi, [rax + 24]
-    mov eax, [rbp - 16]
-    imul eax, 16
-    cdqe
-    mov rsi, rax
-    call realloc
-    mov rdx, [rbp - 8]
-    mov rdx, [rdx]
-    mov [rdx + 24], rax
+    ; prepare flip mask in xmm1 for horizontal flipping
+    mov         eax, MASK_NEG               ; 0x80000000
+    movd        xmm1, eax                   ; xmm1 = {-0.0, 0.0, 0.0, 0.0}
+    pslldq      xmm1, 8                     ; xmm1 = {0.0, 0.0, -0.0, 0.0}
 
-    mov dword [rbp - 20], 0
+.loop:
+    ; load rectangle from source
+    movaps      xmm0, [rbx]                 ; xmm0 = {x, y, width, height}
 
-    jmp .L1
+    ; apply horizontal flip by negating width
+    xorps       xmm0, xmm1                  ; xmm0 = {x, y, -width, height}
 
-.L2:
-    ; Temporary Rectangle
-    ; Rectangle = spritesheet->frames[i]
-    mov rax, [rbp - 8]
-    mov rax, [rax]
-    mov rdx, [rax + 24]
-    mov eax, [rbp - 20]
-    imul eax, 16
-    cdqe
-    add rax, rdx
-    movsd xmm0, [rax]
-    movsd xmm1, [rax + 8]
-    movsd [rbp - 36], xmm0
-    movsd [rbp - 28], xmm1
+    ; store flipped rectangle into destination
+    movaps      [r12], xmm0
 
-    ; Copy position(x, y) of temporary rectangle
-    ; to new frame
-    mov rax, [rbp - 8]
-    mov rax, [rax]
-    mov rdx, [rax + 24]
-    mov eax, [rbp - 12]
-    add eax, [rbp - 20]
-    imul eax, 16
-    cdqe
-    add rdx, rax
+    ; advance to next rectangle in source & destination
+    lea         rbx, [rbx + 16]             ; next source
+    lea         r12, [r12 + 16]             ; next destination
 
-    ; Copy Rectangle.x
-    movsd xmm0, [rbp - 36]
-    movsd [rdx], xmm0
+    dec         r14d                        ; index--
+    jnz         .loop
 
-    ; Copy Rectangle.width [Negative]
-    movss xmm0, [rbp - 28]
-    mov eax, -0.0
-    movd xmm1, eax
-    xorps xmm0, xmm1
-    movss [rdx + 8], xmm0
+    mov         [r15 + 28], r13d            ; update frameCount
+    ret
 
-    ; Copy Rectangle.height
-    movss xmm0, [rbp - 24]
-    movss [rdx + 12], xmm0
+; rdi   = entity
+; si    = state
+; dx    = direction
+; ecx   = start
+; r8d   = end
+; xmm0  = frameTime
+_addSpriteAnimation:
+    mov         r12, rdi                    ; entity ptr
+    mov         eax, [r12 + 416]            ; animationStateCount
+    cmp         eax, ANIMATION_STATES_CAP
+    jae         .done
 
-    add dword [rbp - 20], 1
+    ; calculate offset for animationStates[count]
+    mov         r13d, eax                   ; parallax.count
+    shl         r13, 4                      ; sizeof AnimState (16)
+    lea         r13, [r12 + r13 + 32]       ; base + index + 32
 
-.L1:
-    mov eax, [rbp - 20]
-    cmp eax, [rbp - 12]
-    jl .L2
+    ; set animation data
+    mov         [r13], ecx                  ; start
+    mov         [r13 + 4], r8d              ; end
+    movss       [r13 + 8], xmm0             ; frameRate
+    mov         [r13 + 12], si              ; state
+    mov         [r13 + 14], dx              ; direction
 
-    ; Change original to new frameCount
-    mov rax, [rbp - 8]
-    mov rax, [rax]
-    mov edx, [rbp - 16]
-    mov [rax + 32], edx
+    ; check lookup bounds
+    cmp         si, ANIMATION_LOOKUP_CAP
+    jge         .skipLookup
 
-    add rsp, 48
-    pop rbp
+    ; calc lookup index
+    cmp         dx, DIRECTION_RIGHT
+    sete        al
+    movzx       eax, al                     ; col = direction
+    movzx       r8d, si                     ; row = state
+    lea         r8, [rax + r8*2]            ; col + row * nCol
+    mov         [r12 + r8*8 + 288], r13     ; base + offset + r8 * 8
+
+.skipLookup:
+    inc         dword [r12 + 416]           ; count++
+
+.done:
+    ret
+
+_setSpriteAnimation:
+    cmp         si, ANIMATION_LOOKUP_CAP
+    jge         .done
+
+    mov         r12, rdi                    ; player
+    mov         r13, [r12]                  ; player->entity
+
+    cmp         dx, DIRECTION_RIGHT
+    sete        al
+    movzx       eax, al                     ; col = direction
+    movzx       r8d, si                     ; row = state
+    lea         r8, [rax + r8*2]            ; col + row * nCol
+    lea         r14, [r13 + r8*8 + 288]     ; base + offset + r8*8
+
+    mov         r14, [r14]                  ; LOAD pointer from lookup table
+    test        r14, r14                    ; test pointer content (not address)
+    jz          .done
+
+    mov         [r12 + 8], r14              ; store animation pointer to player
+
+    mov         eax, [r14]                  ; get first frame (startFrame)
+    mov         [r12 + 56], eax             ; store currentFrame
+    mov         [r12 + 52], si              ; store state
+    mov         [r12 + 54], dx              ; store direction
+
+.done:
     ret
 
