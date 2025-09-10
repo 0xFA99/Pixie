@@ -8,7 +8,7 @@ SOURCES = pixie.asm
 
 OBJ = $(SOURCES:.asm=.o)
 
-LDFLAGS = -dynamic-linker /lib64/ld-linux-x86-64.so.2 -L. -lc -lraylib -lm
+LDFLAGS = -dynamic-linker /lib64/ld-linux-x86-64.so.2 -L. -lc -lraylib -lm -rpath=.
 
 $(BIN): $(OBJ)
 	$(LD) -o $(BIN) $(OBJ) $(LDFLAGS)

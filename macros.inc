@@ -52,14 +52,14 @@ macro endCamera
 
 macro startScissorMode x, y, width, height
 {
-    mov         edi, -10
-    mov         esi, -10
+    mov         edi, 20
+    mov         esi, 20
 
     mov         edx, [screenWidth]
     mov         ecx, [screenHeight]
 
-    lea         edx, [edx + 20]
-    lea         ecx, [ecx + 20]
+    lea         edx, [edx - 40]
+    lea         ecx, [ecx - 40]
     call        BeginScissorMode
 }
 
