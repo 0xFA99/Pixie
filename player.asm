@@ -186,14 +186,14 @@ _inputPlayer:
 ; ================================ STATE: FALL =================================
 .stateFall:
     cmp         byte [r12 + 60], 0          ; player.isGrounded
-    je          .stateFallCheckDirection
+    je          .stateFall_checkDirection
 
     cmp         r14d, STATE_RUN
     sete        al
     movzx       ax, al
     mov         [r12 + 52], ax              ; player.state
 
-.stateFallCheckDirection:
+.stateFall_checkDirection:
     test        r14d, r14d
     jz          .done
 

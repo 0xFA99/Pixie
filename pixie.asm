@@ -35,20 +35,20 @@ _start:
 
     ; @params: object, state, direction, start, end, speed
     ; Animation State (Idle)
-    addSpriteAnimation [player], STATE_IDLE, DIRECTION_RIGHT, 0, 5, 10.0
-    addSpriteAnimation [player], STATE_IDLE, DIRECTION_LEFT, 102, 107, 10.0
+    addSpriteAnimation [player], STATE_IDLE, DIRECTION_RIGHT, 0, 5, 12.0
+    addSpriteAnimation [player], STATE_IDLE, DIRECTION_LEFT, 102, 107, 12.0
 
     ; Animation State (Run)
-    addSpriteAnimation [player], STATE_RUN, DIRECTION_RIGHT, 6, 13, 10.0
-    addSpriteAnimation [player], STATE_RUN, DIRECTION_LEFT, 108, 115, 10.0
+    addSpriteAnimation [player], STATE_RUN, DIRECTION_RIGHT, 6, 13, 15.0
+    addSpriteAnimation [player], STATE_RUN, DIRECTION_LEFT, 108, 115, 15.0
 
     ; Animation State (Jump)
-    addSpriteAnimation [player], STATE_JUMP, DIRECTION_RIGHT, 41, 43, 10.0
-    addSpriteAnimation [player], STATE_JUMP, DIRECTION_LEFT, 143, 145, 10.0
+    addSpriteAnimation [player], STATE_JUMP, DIRECTION_RIGHT, 41, 43, 8.0
+    addSpriteAnimation [player], STATE_JUMP, DIRECTION_LEFT, 143, 145, 8.0
 
     ; Animation State (Fall)
-    addSpriteAnimation [player], STATE_FALL, DIRECTION_RIGHT, 46, 48, 10.0
-    addSpriteAnimation [player], STATE_FALL, DIRECTION_LEFT, 148, 150, 10.0
+    addSpriteAnimation [player], STATE_FALL, DIRECTION_RIGHT, 46, 48, 8.0
+    addSpriteAnimation [player], STATE_FALL, DIRECTION_LEFT, 148, 150, 8.0
 
     ; Animation State (Break)
     addSpriteAnimation [player], STATE_BREAK, DIRECTION_RIGHT, 76, 76, 10.0

@@ -32,12 +32,12 @@ _addParallax:
     pop         rbp
     ret
 
-_updateParallax: 
+_updateParallax:
     mov         r12,  rdi                   ; store pointer
     xor         ecx,  ecx                   ; index = 0
     mov         r13d,  [r12 + 512]          ; parallax.count
 
-.loop: 
+.loop:
     mov         eax,  ecx
     shl         rax,  5                     ; index * 32
     lea         rbx,  [r12 + rax]           ; base[index]
@@ -58,13 +58,13 @@ _updateParallax:
     movss       xmm3,  xmm5
     jmp         .apply
 
-.checkLeft: 
+.checkLeft:
     ; else if (playerPosX <= offsetLeft)
     comiss      xmm1,  xmm6
     ja          .apply
     movss       xmm3,  xmm6
 
-.apply: 
+.apply:
     ; pos -= velocityX * speed * frameTime
     movss       xmm7,  [rbx+28]              ; load speed
     mulss       xmm7,  xmm0                  ; * velocityX
@@ -88,7 +88,7 @@ _renderParallax:
     mov         eax, 0x3f800000             ; scale = 1.0
     movd        xmm11, eax
 
-.loop: 
+.loop:
     mov         eax, r12d                   ; index
     shl         rax, 5                      ; sizeof ParallaxData (32)
     lea         r14, [rbx + rax]            ; base[offset]
@@ -112,7 +112,6 @@ _renderParallax:
     mov         edi, 0xFFFFFFFF             ; color (white)
     call        DrawTextureEx
 
-    ; Draw right copy
     movaps      xmm0, xmm10
     addss       xmm0, xmm8
     pxor        xmm1, xmm1                  ; rotation = 0.0
@@ -120,8 +119,23 @@ _renderParallax:
     mov         edi, 0xFFFFFFFF             ; color
     call        DrawTextureEx
 
-    ; Draw left copy
     movaps      xmm0, xmm10
+    subss       xmm0, xmm8
+    pxor        xmm1, xmm1                  ; rotation = 0.0
+    movss       xmm2, xmm11                 ; scale
+    mov         edi, 0xFFFFFFFF             ; color
+    call        DrawTextureEx
+
+    movaps      xmm0, xmm10
+    addss       xmm0, xmm8
+    addss       xmm0, xmm8
+    pxor        xmm1, xmm1                  ; rotation = 0.0
+    movss       xmm2, xmm11                 ; scale
+    mov         edi, 0xFFFFFFFF             ; color
+    call        DrawTextureEx
+
+    movaps      xmm0, xmm10
+    subss       xmm0, xmm8
     subss       xmm0, xmm8
     pxor        xmm1, xmm1                  ; rotation = 0.0
     movss       xmm2, xmm11                 ; scale
