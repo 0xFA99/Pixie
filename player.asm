@@ -411,6 +411,18 @@ _renderPlayer:
 
     ; @param 3 - Destination Rectangle - DrawTexturePro
     movsd       xmm2, [r12 + 16]            ; player.position { x, y }
+
+    movss       xmm3, xmm1
+
+    mov         eax, 0x40000000
+    movd        xmm4, eax
+    divss       xmm3, xmm4
+
+    mov         edx, 0x7FFFFFFF
+    movd        xmm4, edx
+    andps       xmm3, xmm4
+    subss       xmm2, xmm3
+
     movsd       xmm3, xmm1                  ; source.frame { width, height }
 
     ; @param 4 - Offset
