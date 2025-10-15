@@ -177,17 +177,90 @@ _addFlipSheet:
 ; dx            = state
 ; r8w           = direction
 ; r9d           = start
-; [rsp + 32]    = end           -> rsp + 40
-; [rsp + 40]    = frameTime     -> rsp + 48
+; [rsp + 32]    = end
+; [rsp + 40]    = frameTime
 public _addSpriteAnimation
 _addSpriteAnimation:
     push        r12
+    push        r13
 
     mov         r12, rcx                    ; entity
     mov         eax, [r12 + 416]            ; animationStateCount
+
+    cmp         eax, ANIMATION_STATES_CAP
     jae         .done
 
+    ; calculate offset for animationStates[count]
+    mov         r13d, eax                   ; parallax.count
+    shl         r13, 4                      ; sizeof AnimState (16)
+    lea         r13, [r13 + r12 + 32]       ; base + index + 32
+
+    ; set animation data
+    mov         [r13], r9d                  ; start
+    mov         eax, [rsp + 56]             ; end
+    movss       xmm0, [rsp + 64]            ; frameTime
+    mov         [r13 + 4], eax
+    movss       [r13 + 8], xmm0
+    mov         [r13 + 12], dx              ; state
+    mov         [r13 + 14], r8w             ; direction
+
+    cmp         dx, ANIMATION_LOOKUP_CAP
+    jge         .skipLookup
+
+    cmp         r8w, DIRECTION_RIGHT
+    sete        al
+    movzx       eax, al
+    movzx       r8d, dx
+    lea         r8, [rax + r8*2]
+    mov         [r12 + r8*8 + 288], r13
+
+.skipLookup:
+    inc         dword [r12 + 416]           ; count++
+
 .done:
+    pop         r13
     pop         r12
+    ret
+
+
+; rcx = object
+; dx = state
+; r8w = direction
+public _setSpriteAnimation
+_setSpriteAnimation:
+    push        rdi
+    push        r12
+    push        r13
+    push        r14
+
+    cmp         dx, ANIMATION_LOOKUP_CAP
+    jge         .done
+
+    mov         r12, rcx                    ; player
+    mov         r13, [r12]                  ; player->entity
+
+    cmp         r8w, DIRECTION_RIGHT
+    sete        al
+    movzx       eax, al
+    movzx       edi, dx
+    lea         rdi, [rax + rdi*2]
+    lea         r14, [r13 + rdi*8 + 288]
+
+    mov         r14, [r14]
+    test        r14, r14
+    jz          .done
+
+    mov         [r12 + 8], r14
+
+    mov         eax, [r14]
+    mov         [r12 + 56], eax             ; current frame
+    mov         [r12 + 52], dx              ; state
+    mov         [r12 + 54], r8w              ; direction
+
+.done:
+    pop         r14
+    pop         r13
+    pop         r12
+    pop         rdi
     ret
 
