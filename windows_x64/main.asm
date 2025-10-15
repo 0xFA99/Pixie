@@ -75,9 +75,9 @@ main:
     call        BeginMode2D
     add         rsp, 32
 
-    ; mov         dword [player + 56], 1
-    ; lea         rcx, [player]
-    ; call        _renderPlayer
+    mov         dword [player + 56], 1      ; TEST...
+    lea         rcx, [player]               ; player*
+    call        _renderPlayer
 
     call        EndMode2D
 
