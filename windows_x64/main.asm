@@ -28,8 +28,8 @@ main:
     lea         r8, [g_title]               ; window title
     call        InitWindow
 
-    ; lea         rcx, [camera]               ; camera*
-    ; call        _initCamera
+    lea         rcx, [camera]               ; camera*
+    call        _initCamera
 
     lea         rcx, [player]               ; player*
     call        _initPlayer
