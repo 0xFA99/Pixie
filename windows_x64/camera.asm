@@ -5,27 +5,27 @@ extrn GetScreenHeight
 
 section '.text' code readable executable
 
+; rcx = camera*
 public _initCamera
 _initCamera:
     push        rbx
-    sub         rsp, 48
+    sub         rsp, 32                     ; shadow space
 
-    mov         rbx, rcx
+    mov         rbx, rcx                    ; camera*
 
-    call        GetScreenWidth
-    shr         rax, 1
-    cvtsi2ss    xmm0, rax
+    call        GetScreenWidth              ; screen width
+    shr         rax, 1                      ; screen width / 2
+    cvtsi2ss    xmm0, rax                   ; int to float
 
-    call        GetScreenHeight
-    shr         rax, 1
-    cvtsi2ss    xmm1, rax
+    call        GetScreenHeight             ; screen height
+    shr         rax, 1                      ; screen height / 2
+    cvtsi2ss    xmm1, rax                   ; int to float
 
-    movss       [rbx], xmm0
-    movss       [rbx + 4], xmm1
-    mov         dword [rbx + 20], 0x40000000
+    movss       [rbx], xmm0                 ; camera.offset.x
+    movss       [rbx + 4], xmm1             ; camera.offset.y
+    mov         dword [rbx + 20], 0x40000000; camera.zoom = 2.0
 
-    add         rsp, 48
+    add         rsp, 32
     pop         rbx
     ret
-
 
