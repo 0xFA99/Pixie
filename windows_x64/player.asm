@@ -40,10 +40,11 @@ _initPlayer:
 
 public _renderPlayer
 _renderPlayer:
+    push        rdi
     push        r12
     push        r13
 
-    sub         rsp, 104
+    sub         rsp, 112
 
     mov         r12, rcx
     mov         r13, [rcx]
@@ -87,9 +88,10 @@ _renderPlayer:
     lea         rcx, [rsp + 48]                 ; texture*
     call        DrawTexturePro
 
-    add         rsp, 104
+    add         rsp, 112
 
     pop         r13
     pop         r12
+    pop         rdi
     ret
 
