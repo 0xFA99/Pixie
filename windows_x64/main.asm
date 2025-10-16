@@ -16,12 +16,17 @@ extrn CloseWindow
 extrn GetFrameTime
 
 extrn _initCamera
+extrn _updateCamera
+
 extrn _loadSpriteSheet
 extrn _addFlipSheet
+
 extrn _initPlayer
 extrn _inputPlayer
 extrn _updatePlayer
 extrn _renderPlayer
+
+extrn _renderParallax
 
 section '.text' code readable executable
 public main
@@ -71,6 +76,8 @@ main:
 
     setSpriteAnimation player, STATE_IDLE, DIRECTION_RIGHT
 
+    addParallax parallax, parallax_background, -200.0, 0.05
+
     mov         ecx, 60
     call        SetTargetFPS
 
@@ -85,6 +92,10 @@ main:
     movss       xmm1, [frameTime]
     lea         rcx, [player]
     call        _updatePlayer
+
+    lea         rcx, [camera]
+    lea         rdx, [player]
+    call        _updateCamera
 
     movss       xmm1, [frameTime]
     lea         rcx, [player]
@@ -104,6 +115,9 @@ main:
     lea         rcx, [rsp + 32]
     call        BeginMode2D
     add         rsp, 32
+
+    lea         rcx, [parallax]
+    call        _renderParallax
 
     lea         rcx, [player]               ; player*
     call        _renderPlayer
@@ -135,4 +149,6 @@ parallax        rq 65
 section '.rdata' data readable
 g_title         db "Pixie", 0x0
 g_warrior       db "warrior.png", 0x0
+
+addAsset        parallax_background, "parallax/background.png"
 

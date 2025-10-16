@@ -1,6 +1,8 @@
 extrn _addSpriteAnimation
 extrn _setSpriteAnimation
 
+extrn _addParallax
+
 macro addSpriteAnimation object*, state*, direction*, frameStart*, frameEnd*, fps*
 {
     sub         rsp, 16
@@ -21,5 +23,22 @@ macro setSpriteAnimation object*, state*, direction*
     mov         dx, state
     mov         r8w, direction
     call        _setSpriteAnimation
+}
+
+
+macro addParallax parallax*, texture*, posY*, speed*
+{
+    mov         rcx, parallax
+    mov         rdx, texture
+    mov         r8d, posY
+    mov         eax, speed
+    movd        xmm3, eax
+    call        _addParallax
+}
+
+
+macro addAsset var*, path*
+{
+    var db "assets/", path, 0x0
 }
 
