@@ -26,6 +26,8 @@ extrn _inputPlayer
 extrn _updatePlayer
 extrn _renderPlayer
 
+extrn _renderParallax
+
 section '.text' code readable executable
 public main
 main:
@@ -113,6 +115,9 @@ main:
     lea         rcx, [rsp + 32]
     call        BeginMode2D
     add         rsp, 32
+
+    lea         rcx, [parallax]
+    call        _renderParallax
 
     lea         rcx, [player]               ; player*
     call        _renderPlayer
