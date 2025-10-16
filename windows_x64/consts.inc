@@ -18,6 +18,7 @@ KEY_C               equ 67
 
 ANIMATION_STATES_CAP equ 16
 ANIMATION_LOOKUP_CAP equ 8
+
 PARALLAX_LAYER_CAP equ 16
 
 MASK_NEG            equ 0x80000000
