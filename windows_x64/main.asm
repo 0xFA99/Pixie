@@ -19,6 +19,7 @@ extrn _initCamera
 extrn _loadSpriteSheet
 extrn _addFlipSheet
 extrn _initPlayer
+extrn _inputPlayer
 extrn _updatePlayer
 extrn _renderPlayer
 
@@ -84,6 +85,10 @@ main:
     movss       xmm1, [frameTime]
     lea         rcx, [player]
     call        _updatePlayer
+
+    movss       xmm1, [frameTime]
+    lea         rcx, [player]
+    call        _inputPlayer
 
     call        BeginDrawing
 
