@@ -1,3 +1,5 @@
+extrn _addSpriteAnimation
+extrn _setSpriteAnimation
 
 macro addSpriteAnimation object*, state*, direction*, frameStart*, frameEnd*, fps*
 {

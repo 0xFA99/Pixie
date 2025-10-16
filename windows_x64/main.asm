@@ -13,13 +13,13 @@ extrn BeginDrawing
 extrn ClearBackground
 extrn EndDrawing
 extrn CloseWindow
+extrn GetFrameTime
 
 extrn _initCamera
 extrn _loadSpriteSheet
 extrn _addFlipSheet
-extrn _addSpriteAnimation
-extrn _setSpriteAnimation
 extrn _initPlayer
+extrn _updatePlayer
 extrn _renderPlayer
 
 section '.text' code readable executable
@@ -68,7 +68,7 @@ main:
     addSpriteAnimation [player], STATE_BREAK, DIRECTION_RIGHT, 76, 76, 10.0
     addSpriteAnimation [player], STATE_BREAK, DIRECTION_LEFT, 178, 178, 10.0
 
-    setSpriteAnimation player, STATE_RUN, DIRECTION_RIGHT
+    setSpriteAnimation player, STATE_IDLE, DIRECTION_RIGHT
 
     mov         ecx, 60
     call        SetTargetFPS
@@ -78,7 +78,15 @@ main:
     test        al, al
     jnz         .gameEnd
 
+    call        GetFrameTime
+    movss       [frameTime], xmm0
+
+    movss       xmm1, [frameTime]
+    lea         rcx, [player]
+    call        _updatePlayer
+
     call        BeginDrawing
+
     mov         ecx, 0xFF181818
     call        ClearBackground
 
@@ -104,6 +112,9 @@ main:
     call        CloseWindow
     add         rsp, 40
     ret
+
+
+public gravity
 
 section '.data' data readable writeable
 frameTime       dd 0x00000000
