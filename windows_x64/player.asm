@@ -49,23 +49,23 @@ _renderPlayer:
     push        r12
     push        r13
 
-    sub         rsp, 112
+    sub         rsp, 96
 
     mov         r12, rcx
     mov         r13, [rcx]
 
-    movaps      xmm0, [r13]
+    movaps      xmm0, [r13]                 ; texture {id, w, h, m}
     movaps      [rsp + 48], xmm0
-    mov         eax, [r13 + 16]
+    mov         eax, [r13 + 16]             ; texture.format
     mov         [rsp + 60], eax
 
-    mov         rdi, [r13 + 20]
-    mov         eax, [r12 + 56]
-    sal         rax, 4
-    add         rdi, rax
+    mov         rdi, [r13 + 20]             ; player.frames (base)
+    mov         eax, [r12 + 56]             ; player.currentFrame
+    sal         rax, 4                      ; sizeof Rectangle (16)
+    add         rdi, rax                    ; base + currentFrame
 
-    movaps      xmm0, [rdi]
-    movaps      [rsp + 64], xmm0
+    movaps      xmm0, [rdi]                 ; source frame
+    movaps      [rsp + 64], xmm0            ; {pos.x, pos.y, width, height}
 
     movsd       xmm0, [r12 + 16]            ; player.position {x, y}
     movsd       xmm1, [rsp + 72]            ; frame {width, height}
@@ -83,17 +83,15 @@ _renderPlayer:
     subss       xmm0, xmm2
     movsd       [rsp + 80], xmm0            ; player.position {x, y}
 
-    mov         qword [rsp + 96], 0.0       ; offset {0.0, 0.0}
-
     mov         dword [rsp + 40], 0xFFFFFFFF    ; color - white
     mov         qword [rsp + 32], 0             ; rotation
-    lea         r9, [rsp + 96]                  ; offset*
+    xor         r9, r9                          ; offset {0.0, 0.0}
     lea         r8, [rsp + 80]                  ; rect dest*
     lea         rdx, [rsp + 64]                 ; rect source*
     lea         rcx, [rsp + 48]                 ; texture*
     call        DrawTexturePro
 
-    add         rsp, 112
+    add         rsp, 96
 
     pop         r13
     pop         r12

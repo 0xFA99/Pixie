@@ -56,13 +56,13 @@ _renderParallax:
     push        r12
     push        r13
     push        r14
-    sub         rsp, 72                 ; 8 padding
+    sub         rsp, 72
     movdqa      [rsp], xmm6
     movdqa      [rsp + 16], xmm7
     movdqa      [rsp + 32], xmm8
     movdqa      [rsp + 48], xmm9
 
-    sub         rsp, 96
+    sub         rsp, 80
 
     mov         rbx, rcx                    ; parallax*
 
@@ -71,8 +71,7 @@ _renderParallax:
 
     mov         dword [rsp + 32], -1        ; white (0xFFFFFFFF)
 
-    mov         eax, 0x3F800000             ; 1.0
-    movd        xmm9, eax
+    mov         dword [rsp + 36], 1.0       ; scale
 
 .loop:
     mov         eax, r12d                   ; index
@@ -89,26 +88,44 @@ _renderParallax:
     sar         eax, 1
     cvtsi2ss    xmm7, eax                   ; parallax.width / 2.0
 
-    movq        xmm8, [r14 + 20]            ; parallax.position {x, y}
-    movq        [rsp + 80], xmm8
+    movq        xmm0, [r14 + 20]            ; parallax.position {x, y}
 
-    ; back (soon)
+    subss       xmm0, xmm7
+    movaps      xmm9, xmm0
 
-    ; middle
-    movss       xmm3, xmm9                  ; scale
+    ; back
+    movaps      xmm0, xmm9
+    subss       xmm0, xmm6
+
+    movss       xmm3, [rsp + 36]            ; scale
     pxor        xmm2, xmm2                  ; rotation
-    lea         rdx, [rsp + 80]             ; position
+    movq        rdx, xmm0
     lea         rcx, [rsp + 48]             ; texture
     call        DrawTextureEx
 
-    ; front (soon)
 
+    ; middle
+    movss       xmm3, [rsp + 36]            ; scale
+    pxor        xmm2, xmm2                  ; rotation
+    movq        rdx, xmm9                   ; position
+    lea         rcx, [rsp + 48]             ; texture
+    call        DrawTextureEx
+
+    ; front
+    movaps      xmm0, xmm9
+    addss       xmm0, xmm6
+
+    movss       xmm3, [rsp + 36]            ; scale
+    pxor        xmm2, xmm2                  ; rotation
+    movq        rdx, xmm0
+    lea         rcx, [rsp + 48]             ; texture
+    call        DrawTextureEx
 
     inc         r12d                        ; index
     cmp         r12d, r13d                  ; parallax.count
     jl          .loop
 
-    add         rsp, 96
+    add         rsp, 80
 
     movdqa      [rsp + 48], xmm9
     movdqa      [rsp + 32], xmm8
