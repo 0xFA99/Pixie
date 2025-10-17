@@ -76,7 +76,16 @@ main:
 
     setSpriteAnimation player, STATE_IDLE, DIRECTION_RIGHT
 
-    addParallax parallax, parallax_background, -200.0, 0.05
+    ; @params: parallax*, file*, posY, speed
+    addParallax parallax, parallax_background,      -200.0,     0.05
+    addParallax parallax, parallax_cloud_1,         -200.0,     0.08
+    addParallax parallax, parallax_cloud_2,         -200.0,     0.10
+    addParallax parallax, parallax_cloud_3,         -200.0,     0.12
+    addParallax parallax, parallax_props_clouds,    -200.0,     0.15
+    addParallax parallax, parallax_back_forest_1,   -200.0,     0.25
+    addParallax parallax, parallax_back_forest_2,   -200.0,     0.35
+    addParallax parallax, parallax_back_tree_1,     -200.0,     0.55
+    addParallax parallax, parallax_back_tree_2,     -200.0,     0.75
 
     mov         ecx, 60
     call        SetTargetFPS
@@ -151,4 +160,12 @@ g_title         db "Pixie", 0x0
 g_warrior       db "warrior.png", 0x0
 
 addAsset        parallax_background, "parallax/background.png"
+addAsset        parallax_cloud_1, "parallax/Cloud_1.png"
+addAsset        parallax_cloud_2, "parallax/Cloud_2.png"
+addAsset        parallax_cloud_3, "parallax/Cloud_3.png"
+addAsset        parallax_props_clouds, "parallax/props_clouds.png"
+addAsset        parallax_back_forest_1, "parallax/Back_Forest_1.png"
+addAsset        parallax_back_forest_2, "parallax/Back_Forest_2.png"
+addAsset        parallax_back_tree_1, "parallax/Back_tree_1.png"
+addAsset        parallax_back_tree_2, "parallax/Back_tree_2.png"
 
