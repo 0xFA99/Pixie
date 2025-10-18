@@ -1,20 +1,30 @@
-macro addAsset var, path
+
+extrn BeginScissorMode
+extrn EndScissorMode
+extrn BeginMode2D
+extrn EndMode2D
+
+extrn _addSpriteAnimation
+extrn _setSpriteAnimation
+extrn _addParallax
+
+
+macro addAsset var*, path*
 {
     var db "assets/", path, 0x0
 }
 
-macro addParallax parallax, texture, posX, posY, speed
+macro addParallax parallax*, texture*, posY*, speed*
 {
     mov         rdi, parallax
     mov         rsi, texture
-    mov         edx, posX
-    mov         ecx, posY
+    mov         edx, posY
     mov         eax, speed
     movd        xmm0, eax
     call        _addParallax
 }
 
-macro addSpriteAnimation object, state, direction, frameStart, frameEnd, fps
+macro addSpriteAnimation object*, state*, direction*, frameStart*, frameEnd*, fps*
 {
     mov         rdi, object
     mov         si, state
@@ -26,7 +36,7 @@ macro addSpriteAnimation object, state, direction, frameStart, frameEnd, fps
     call        _addSpriteAnimation
 }
 
-macro setSpriteAnimation object, state, direction
+macro setSpriteAnimation object*, state*, direction*
 {
     mov         rdi, object
     mov         si, state
@@ -34,7 +44,7 @@ macro setSpriteAnimation object, state, direction
     call        _setSpriteAnimation
 }
 
-macro startCamera camera
+macro startCamera camera*
 {
     sub         rsp, 32                     ; 24 camera + 8 padding
     movaps      xmm0, [camera]              ; offset(x, y), target(x, y)
@@ -52,14 +62,17 @@ macro endCamera
 
 macro startScissorMode x, y, width, height
 {
-    mov         edi, 20
-    mov         esi, 20
+    ; mov         edi, 20
+    ; mov         esi, 20
+    ; mov         edx, [screenWidth]
+    ; mov         ecx, [screenHeight]
+    ; lea         edx, [edx - 40]
+    ; lea         ecx, [ecx - 40]
 
+    xor         edi, edi
+    xor         esi, esi
     mov         edx, [screenWidth]
     mov         ecx, [screenHeight]
-
-    lea         edx, [edx - 40]
-    lea         ecx, [ecx - 40]
     call        BeginScissorMode
 }
 

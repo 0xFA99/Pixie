@@ -1,38 +1,62 @@
+
+format ELF64
+
+include 'include/consts.inc'
+
+extrn LoadTexture
+extrn DrawTextureEx
+
+section '.text' executable
+
 ; @param    rdi     -> parallax
 ; @param    rsi     -> texture
-; @param    edx     -> posX
-; @param    ecx     -> posY
+; @param    edx     -> posY
 ; @param    xmm0    -> speed
+public _addParallax
 _addParallax:
-    push        rbp
-    mov         rbp, rsp
+    push        rbx
+    push        r12
+    push        r13
+    push        r14
+
+    sub         rsp, 8                      ; padding
 
     mov         rbx, rdi                    ; parallax
+    mov         r13d, edx                   ; position.y
+    movd        r14d, xmm0                  ; frameTime
 
-    mov         r13d, edx                   ; position.x
-    mov         r14d, ecx                   ; position.y
-    movd        r15d, xmm0
-
-    mov         eax, [rdi + 512]            ; parallax.count
+    mov         eax, [rbx + 512]            ; parallax.count
     cmp         eax, PARALLAX_LAYER_CAP
     jge         .done
 
-    shl         rax, 5                      ; sizeof ParallaxData (32)
+    shl         rax, 5                      ; sizeof Parallax.data (32)
     lea         rdi, [rbx + rax]            ; parallax.base[parallax.count]
     mov         r12, rdi
     call        LoadTexture
 
-    mov         [r12 + 20], r13d
-    mov         [r12 + 24], r14d
-    mov         [r12 + 28], r15d
+    mov         dword [r12 + 20], 0.0       ; position.x
+    mov         [r12 + 24], r13d            ; position.y
+    mov         [r12 + 28], r14d            ; frameTime
 
-    inc         dword [rbx + 512]
+    inc         dword [rbx + 512]           ; parallax.count
 
 .done:
-    pop         rbp
+    add         rsp, 8
+
+    pop         r14
+    pop         r13
+    pop         r12
+    pop         rbx
     ret
 
+
+
+public _updateParallax
 _updateParallax:
+    push        rbx
+    push        r12
+    push        r13
+
     mov         r12,  rdi                   ; store pointer
     xor         ecx,  ecx                   ; index = 0
     mov         r13d,  [r12 + 512]          ; parallax.count
@@ -42,7 +66,7 @@ _updateParallax:
     shl         rax,  5                     ; index * 32
     lea         rbx,  [r12 + rax]           ; base[index]
 
-    movss       xmm3,  [rbx+20]             ; parallax.position.x
+    movss       xmm3,  [rbx + 20]           ; parallax.position.x
     mov         eax,  dword [rbx + 4]
     cvtsi2ss    xmm4,  eax                  ; width/2
 
@@ -66,21 +90,35 @@ _updateParallax:
 
 .apply:
     ; pos -= velocityX * speed * frameTime
-    movss       xmm7,  [rbx+28]              ; load speed
-    mulss       xmm7,  xmm0                  ; * velocityX
-    mulss       xmm7,  xmm2                  ; * frameTime
+    movss       xmm7,  [rbx + 28]           ; load speed
+    mulss       xmm7,  xmm0                 ; * velocityX
+    mulss       xmm7,  xmm2                 ; * frameTime
     subss       xmm3,  xmm7
-    movss       [rbx+20],  xmm3              ; store result
+    movss       [rbx + 20],  xmm3           ; store result
 
     inc         ecx
     cmp         ecx,  r13d
     jl          .loop
 
+    pop         r13
+    pop         r12
+    pop         rbx
     ret
 
+
+
+public _renderParallax
 _renderParallax:
-    push        rbp
-    mov         rbp, rsp
+    push        rbx
+    push        r12
+    push        r13
+    push        r14
+
+    sub         rsp, 72                     ; 4 xmm reg + 8 padding
+    movdqa      [rsp], xmm8
+    movdqa      [rsp + 16], xmm9
+    movdqa      [rsp + 32], xmm10
+    movdqa      [rsp + 48], xmm11
 
     xor         r12d, r12d                  ; index = 0
     mov         r13d, [rdi + 512]           ; parallax.count
@@ -149,5 +187,19 @@ _renderParallax:
     jl          .loop
 
 .done:
-    pop         rbp
+    movdqa      xmm11, [rsp + 48]
+    movdqa      xmm10, [rsp + 32]
+    movdqa      xmm9, [rsp + 16]
+    movdqa      xmm8, [rsp]
+    add         rsp, 72
+
+    pop         r14
+    pop         r13
+    pop         r12
+    pop         rbx
     ret
+
+
+
+section '.note.GNU-stack'
+

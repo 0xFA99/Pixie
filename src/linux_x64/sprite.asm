@@ -1,10 +1,26 @@
+
+format ELF64
+
+include 'include/consts.inc'
+
+extrn LoadTexture
+
+extrn malloc
+extrn realloc
+
+section '.text' executable
+
 ; rdi     -> sprite entity
 ; rsi     -> texture
 ; edx     -> rows
 ; ecx     -> columns
+public _loadSpriteSheet
 _loadSpriteSheet:
-    push        rbp
-    mov         rbp, rsp
+    push        rbx
+    push        r12
+    push        r13
+    push        r14
+    push        r15
 
     ; backup arguments
     mov         r15, rdi                    ; sprite
@@ -94,11 +110,24 @@ _loadSpriteSheet:
     jmp         .loop_row
 
 .done:
-    pop         rbp
+    pop         r15
+    pop         r14
+    pop         r13
+    pop         r12
+    pop         rbx
     ret
 
+
+
 ; rdi     -> sprite entity
+public _addFlipSheet
 _addFlipSheet:
+    push        rbx
+    push        r12
+    push        r13
+    push        r14
+    push        r15
+
     mov         r15, rdi                    ; sprite
     mov         r14d, [r15 + 28]            ; old frameCount
 
@@ -143,7 +172,15 @@ _addFlipSheet:
     jnz         .loop
 
     mov         [r15 + 28], r13d            ; update frameCount
+
+    pop         r15
+    pop         r14
+    pop         r13
+    pop         r12
+    pop         rbx
     ret
+
+
 
 ; rdi   = entity
 ; si    = state
@@ -151,7 +188,11 @@ _addFlipSheet:
 ; ecx   = start
 ; r8d   = end
 ; xmm0  = frameTime
+public _addSpriteAnimation
 _addSpriteAnimation:
+    push        r12
+    push        r13
+
     mov         r12, rdi                    ; entity ptr
     mov         eax, [r12 + 416]            ; animationStateCount
     cmp         eax, ANIMATION_STATES_CAP
@@ -185,9 +226,21 @@ _addSpriteAnimation:
     inc         dword [r12 + 416]           ; count++
 
 .done:
+    pop         r13
+    pop         r12
     ret
 
+
+
+; rdi   = player
+; si    = state
+; dx    = direction
+public _setSpriteAnimation
 _setSpriteAnimation:
+    push        r12
+    push        r13
+    push        r14
+
     cmp         si, ANIMATION_LOOKUP_CAP
     jge         .done
 
@@ -213,5 +266,12 @@ _setSpriteAnimation:
     mov         [r12 + 54], dx              ; store direction
 
 .done:
+    pop         r14
+    pop         r13
+    pop         r12
     ret
+
+
+
+section '.note.GNU-stack'
 
