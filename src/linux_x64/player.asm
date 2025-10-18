@@ -1,7 +1,24 @@
+
+format ELF64
+
+include 'include/consts.inc'
+include 'include/macros.inc'
+
+extrn malloc
+extrn memset
+
+extrn DrawTexturePro
+extrn IsKeyPressed
+extrn IsKeyDown
+
+extrn gravity
+
+section '.text' executable
+
 ; @param rdi: player
+public _initPlayer
 _initPlayer:
-    push        rbp
-    mov         rbp, rsp
+    push        rbx
 
     mov         rbx, rdi                    ; player
 
@@ -17,17 +34,29 @@ _initPlayer:
     call        memset
 
     ; movement initialization
-    mov         dword [rbx + 32], 1200.0    ; player.acceleration
-    mov         dword [rbx + 36], 1800.0    ; player.deceleration
-    mov         dword [rbx + 40], 450.0     ; player.topSpeed
+    mov         dword [rbx + 32], 950.0     ; player.acceleration
+    mov         dword [rbx + 36], 1200.0    ; player.deceleration
+    mov         dword [rbx + 40], 380.0     ; player.topSpeed
     mov         dword [rbx + 44], 420.0     ; player.jumpForce
-    mov         dword [rbx + 48], 300.0     ; player.breakThreshold
+    mov         dword [rbx + 48], 370.0     ; player.breakThreshold
     mov         byte [rbx + 60], 1          ; player.isGrounded
 
-    pop         rbp
+    pop         rbx
     ret
 
+
+
+; rdi   = player
+; xmm0  = frameTime
+public _inputPlayer
 _inputPlayer:
+    push        r12
+    push        r13
+    push        r14
+    push        r15
+
+    sub         rsp, 8                      ; padding
+
     mov         r12, rdi                    ; player
 
     mov         edi, KEY_UP
@@ -51,8 +80,8 @@ _inputPlayer:
     ; fabsf(player.velocity.x)
     movaps      xmm3, xmm1
     mov         eax, MASK_ABS               ; 0x7FFFFFFF
-    movd        xmm8, eax
-    andps       xmm3, xmm8
+    movd        xmm4, eax
+    andps       xmm3, xmm4
 
     test        r13b, r13b
     jz          .playerState
@@ -106,7 +135,7 @@ _inputPlayer:
 
     addss       xmm1, xmm4                  ; velocity.x * xmm4
     movss       [r12 + 24], xmm1            ; player.velocity.x
-    ret
+    jmp         .done
 
 ; ================================= STATE: RUN =================================
 .stateRun:
@@ -138,7 +167,7 @@ _inputPlayer:
     mulss       xmm4, xmm2                  ; dir * accel*dt
     addss       xmm1, xmm4
     movss       [r12 + 24], xmm1            ; player.velocity.x
-    ret
+    jmp         .done
 
 .stateRun_checkBreak:
     movss       xmm4, [r12 + 48]            ; breakThreshold
@@ -146,7 +175,7 @@ _inputPlayer:
     jbe         .stateRun_keepRun
 
     mov         word [r12 + 52], STATE_BREAK
-    ret
+    jmp         .done
 
 .stateRun_noInput:
     movss       xmm4, [r12 + 48]            ; breakThreshold
@@ -154,12 +183,12 @@ _inputPlayer:
     jbe         .stateRun_toIdle
 
     mov         word [r12 + 52], STATE_BREAK
-    ret
+    jmp         .done
 
 .stateRun_toIdle:
     mov         dword [r12 + 24], 0.0
     mov         word [r12 + 52], STATE_IDLE
-    ret
+    jmp         .done
 
 ; ================================ STATE: JUMP =================================
 .stateJump:
@@ -181,7 +210,7 @@ _inputPlayer:
     mulss       xmm4, xmm2
     addss       xmm1, xmm4
     movss       [r12 + 24], xmm1            ; player.velocity.x
-    ret
+    jmp         .done
 
 ; ================================ STATE: FALL =================================
 .stateFall:
@@ -204,7 +233,7 @@ _inputPlayer:
     mulss       xmm4, xmm2
     addss       xmm1, xmm4
     movss       [r12 + 24], xmm1            ; player.velocity.x
-    ret
+    jmp         .done
 
 ; ================================ STATE: BREAK ================================
 .stateBreak:
@@ -261,12 +290,24 @@ _inputPlayer:
 .stateBreak_toRun:
     mov         word [r12 + 52], STATE_RUN
     mov         [r12 + 54], r14w
-    ret
 
 .done:
+    add         rsp, 8
+
+    pop         r15
+    pop         r14
+    pop         r13
+    pop         r12
     ret
 
+
+
+public _updatePlayer
 _updatePlayer:
+    push        r13
+    push        r14
+    push        r15
+
     mov         r15, rdi                    ; player
     mov         r14, [r15 + 8]              ; player->animationState
 
@@ -381,18 +422,23 @@ _updatePlayer:
     mov         [r15 + 56], eax             ; currentFrame = startFrame
 
 .done:
+    pop         r15
+    pop         r14
+    pop         r13
     ret
 
+; rdi = player
+public _renderPlayer
 _renderPlayer:
-    push        rbp
-    mov         rbp, rsp
+    push        r12
+    push        r13
 
     mov         r12, rdi                    ; Player*
     mov         r13, [rdi]                  ; Player->entity
 
     ; @param 1 - Texture - DrawTexturePro
     ; Setup texture
-    sub         rsp, 32                     ; 20 texture + 12 padding
+    sub         rsp, 24                     ; 20 texture + 4 padding
     movaps      xmm0, [r13]                 ; texture {id, w, h, mipmaps}
     movaps      [rsp], xmm0
     mov         eax, [r13 + 16]             ; texture.format
@@ -435,7 +481,11 @@ _renderPlayer:
     mov         edi, 0xFFFFFFFF             ; white
 
     call        DrawTexturePro
-    add         rsp, 32
+    add         rsp, 24
 
-    pop         rbp
+    pop         r13
+    pop         r12
     ret
+
+section '.note.GNU-stack'
+
