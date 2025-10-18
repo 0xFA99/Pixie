@@ -26,7 +26,7 @@ _initCamera:
 
     movss       [rbx], xmm0                 ; camera.offset.x
     movss       [rbx + 4], xmm1             ; camera.offset.y
-    mov         dword [rbx + 20], 0x40000000; camera.zoom = 2.0
+    mov         dword [rbx + 20], 0x3fe66666; camera.zoom = 1.8
 
     add         rsp, 32
     pop         rbx
@@ -72,7 +72,7 @@ _updateCamera:
     test        al, al
     jz          .done
 
-    mov         eax, 0x40000000             ; 2.0
+    mov         eax, 0x3fe66666             ; 1.8
     movd        xmm7, eax
 
 .done:

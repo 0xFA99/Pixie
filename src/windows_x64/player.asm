@@ -32,11 +32,11 @@ _initPlayer:
     call        memset
 
     ; movement initialization
-    mov         dword [rbx + 32], 1200.0    ; player.acceleration
-    mov         dword [rbx + 36], 1800.0    ; player.deceleration
-    mov         dword [rbx + 40], 450.0     ; player.topSpeed
+    mov         dword [rbx + 32], 950.0    ; player.acceleration
+    mov         dword [rbx + 36], 1200.0    ; player.deceleration
+    mov         dword [rbx + 40], 380.0     ; player.topSpeed
     mov         dword [rbx + 44], 420.0     ; player.jumpForce
-    mov         dword [rbx + 48], 300.0     ; player.breakThreshold
+    mov         dword [rbx + 48], 370.0     ; player.breakThreshold
     mov         byte [rbx + 60], 1          ; player.isGrounded
 
     add         rsp, 32                     ; shadow space
@@ -491,3 +491,4 @@ _updatePlayer:
     pop         r14
     pop         r13
     ret
+
