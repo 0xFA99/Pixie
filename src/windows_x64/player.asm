@@ -1,7 +1,7 @@
 format MS64 COFF
 
-include 'macros.inc'
-include 'consts.inc'
+include 'include/macros.inc'
+include 'include/consts.inc'
 
 extrn malloc
 extrn memset

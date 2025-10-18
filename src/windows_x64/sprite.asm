@@ -1,6 +1,6 @@
 format MS64 COFF
 
-include 'consts.inc'
+include 'include/consts.inc'
 
 extrn malloc
 extrn realloc

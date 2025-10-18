@@ -1,8 +1,8 @@
 
 format MS64 COFF
 
-include 'macros.inc'
-include 'consts.inc'
+include 'include/macros.inc'
+include 'include/consts.inc'
 
 extrn InitWindow
 extrn WindowShouldClose
@@ -43,7 +43,7 @@ main:
     call        _initPlayer
 
     mov         rcx, [player]               ; player->sprite
-    lea         rdx, [g_warrior]            ; texture
+    lea         rdx, [player_texture]       ; texture
     mov         r8d, 17                     ; rows
     mov         r9d, 6                      ; columns
     call        _loadSpriteSheet
@@ -161,8 +161,8 @@ parallax        rq 65
 
 section '.rdata' data readable
 g_title         db "Pixie", 0x0
-g_warrior       db "warrior.png", 0x0
 
+addAsset        player_texture, "character/warrior.png"
 addAsset        parallax_background, "parallax/background.png"
 addAsset        parallax_cloud_1, "parallax/Cloud_1.png"
 addAsset        parallax_cloud_2, "parallax/Cloud_2.png"
