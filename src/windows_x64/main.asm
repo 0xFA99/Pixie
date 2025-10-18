@@ -17,15 +17,13 @@ extrn GetFrameTime
 
 extrn _initCamera
 extrn _updateCamera
-
 extrn _loadSpriteSheet
 extrn _addFlipSheet
-
 extrn _initPlayer
 extrn _inputPlayer
 extrn _updatePlayer
 extrn _renderPlayer
-
+extrn _updateParallax
 extrn _renderParallax
 
 section '.text' code readable executable
@@ -55,37 +53,37 @@ main:
 
     ; @params: object, state, direction, start, end, speed
     ; Animation State (Idle)
-    addSpriteAnimation [player], STATE_IDLE, DIRECTION_RIGHT, 0, 5, 12.0
-    addSpriteAnimation [player], STATE_IDLE, DIRECTION_LEFT, 102, 107, 12.0
+    addSpriteAnimation [player], STATE_IDLE, DIRECTION_RIGHT, 0, 5, 9.0
+    addSpriteAnimation [player], STATE_IDLE, DIRECTION_LEFT, 102, 107, 9.0
 
     ; Animation State (Run)
-    addSpriteAnimation [player], STATE_RUN, DIRECTION_RIGHT, 6, 13, 15.0
-    addSpriteAnimation [player], STATE_RUN, DIRECTION_LEFT, 108, 115, 15.0
+    addSpriteAnimation [player], STATE_RUN, DIRECTION_RIGHT, 6, 13, 12.0
+    addSpriteAnimation [player], STATE_RUN, DIRECTION_LEFT, 108, 115, 12.0
 
     ; Animation State (Jump)
-    addSpriteAnimation [player], STATE_JUMP, DIRECTION_RIGHT, 41, 43, 8.0
-    addSpriteAnimation [player], STATE_JUMP, DIRECTION_LEFT, 143, 145, 8.0
+    addSpriteAnimation [player], STATE_JUMP, DIRECTION_RIGHT, 41, 43, 6.5
+    addSpriteAnimation [player], STATE_JUMP, DIRECTION_LEFT, 143, 145, 6.5
 
     ; Animation State (Fall)
-    addSpriteAnimation [player], STATE_FALL, DIRECTION_RIGHT, 46, 48, 8.0
-    addSpriteAnimation [player], STATE_FALL, DIRECTION_LEFT, 148, 150, 8.0
+    addSpriteAnimation [player], STATE_FALL, DIRECTION_RIGHT, 46, 48, 6.5
+    addSpriteAnimation [player], STATE_FALL, DIRECTION_LEFT, 148, 150, 6.5
 
     ; Animation State (Break)
-    addSpriteAnimation [player], STATE_BREAK, DIRECTION_RIGHT, 76, 76, 10.0
-    addSpriteAnimation [player], STATE_BREAK, DIRECTION_LEFT, 178, 178, 10.0
+    addSpriteAnimation [player], STATE_BREAK, DIRECTION_RIGHT, 76, 76, 8.0
+    addSpriteAnimation [player], STATE_BREAK, DIRECTION_LEFT, 178, 178, 8.0
 
     setSpriteAnimation player, STATE_IDLE, DIRECTION_RIGHT
 
     ; @params: parallax*, file*, posY, speed
-    addParallax parallax, parallax_background,      -200.0,     0.05
-    addParallax parallax, parallax_cloud_1,         -200.0,     0.08
-    addParallax parallax, parallax_cloud_2,         -200.0,     0.10
-    addParallax parallax, parallax_cloud_3,         -200.0,     0.12
-    addParallax parallax, parallax_props_clouds,    -200.0,     0.15
-    addParallax parallax, parallax_back_forest_1,   -200.0,     0.25
-    addParallax parallax, parallax_back_forest_2,   -200.0,     0.35
-    addParallax parallax, parallax_back_tree_1,     -200.0,     0.55
-    addParallax parallax, parallax_back_tree_2,     -200.0,     0.75
+    addParallax parallax, parallax_background,      -200.0,     0.02
+    addParallax parallax, parallax_cloud_1,         -200.0,     0.03
+    addParallax parallax, parallax_cloud_2,         -200.0,     0.04
+    addParallax parallax, parallax_cloud_3,         -200.0,     0.05
+    addParallax parallax, parallax_props_clouds,    -200.0,     0.06
+    addParallax parallax, parallax_back_forest_1,   -200.0,     0.10
+    addParallax parallax, parallax_back_forest_2,   -200.0,     0.15
+    addParallax parallax, parallax_back_tree_1,     -200.0,     0.25
+    addParallax parallax, parallax_back_tree_2,     -200.0,     0.35
 
     mov         ecx, 60
     call        SetTargetFPS
@@ -105,6 +103,12 @@ main:
     lea         rcx, [camera]
     lea         rdx, [player]
     call        _updateCamera
+
+    lea         rcx, [parallax]
+    movss       xmm1, dword [player + 24]         ; velocity.x
+    movss       xmm2, dword [player + 16]         ; position.x
+    movss       xmm3, [frameTime]
+    call        _updateParallax
 
     movss       xmm1, [frameTime]
     lea         rcx, [player]

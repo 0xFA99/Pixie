@@ -50,6 +50,7 @@ _addParallax:
     ret
 
 
+
 public _renderParallax
 _renderParallax:
     push        rbx
@@ -103,6 +104,15 @@ _renderParallax:
     lea         rcx, [rsp + 48]             ; texture
     call        DrawTextureEx
 
+    movaps      xmm0, xmm9
+    subss       xmm0, xmm6
+    subss       xmm0, xmm6
+
+    movss       xmm3, [rsp + 36]            ; scale
+    pxor        xmm2, xmm2                  ; rotation
+    movq        rdx, xmm0
+    lea         rcx, [rsp + 48]             ; texture
+    call        DrawTextureEx
 
     ; middle
     movss       xmm3, [rsp + 36]            ; scale
@@ -113,6 +123,16 @@ _renderParallax:
 
     ; front
     movaps      xmm0, xmm9
+    addss       xmm0, xmm6
+
+    movss       xmm3, [rsp + 36]            ; scale
+    pxor        xmm2, xmm2                  ; rotation
+    movq        rdx, xmm0
+    lea         rcx, [rsp + 48]             ; texture
+    call        DrawTextureEx
+
+    movaps      xmm0, xmm9
+    addss       xmm0, xmm6
     addss       xmm0, xmm6
 
     movss       xmm3, [rsp + 36]            ; scale
@@ -133,6 +153,72 @@ _renderParallax:
     add         rsp, 72
     pop         r14
     pop         r13
+    pop         r12
+    pop         rbx
+    ret
+
+
+
+; rcx   = parallax
+; xmm1  = velocity.x
+; xmm2  = position.x
+; xmm3  = frameTime
+public _updateParallax
+_updateParallax:
+    push        rbx
+    push        r12
+    sub         rsp, 24
+    movdqa      [rsp], xmm6
+
+    mov         r12,  rcx                   ; store pointer
+    mov         eax,  [r12 + 512]           ; parallax.count
+    test        eax,  eax                   ; quick exit if empty
+    jz          .done
+
+    mov         ecx,  eax
+    mulss       xmm1,  xmm3                 ; pre-calc: velocityX * frameTime
+    xor         eax,  eax                   ; index = 0
+
+.loop:
+    mov         rbx,  rax
+    shl         rbx,  5                     ; index * 32
+    add         rbx,  r12                   ; base[index]
+
+    movss       xmm4,  [rbx + 20]           ; parallax.position.x
+    cvtsi2ss    xmm5,  [rbx + 4]
+
+    ; Calculate offsetRight and offsetLeft
+    movss       xmm0,  xmm4
+    addss       xmm0,  xmm5                 ; offsetRight = pos + width/2
+    movss       xmm6,  xmm4
+    subss       xmm6,  xmm5                 ; offsetLeft = pos - width/2
+
+    ; Clamp position between offsetLeft and offsetRight
+    comiss      xmm2,  xmm0                 ; if (playerPosX >= offsetRight)
+    cmovbe      eax,  eax                   ; prepare for conditional move (dummy)
+    jb          .checkLeft
+    movss       xmm4,  xmm0                 ; clamp to right
+    jmp         .applyVelocity
+
+.checkLeft:
+    comiss      xmm2,  xmm6                 ; if (playerPosX <= offsetLeft)
+    ja          .applyVelocity
+    movss       xmm4,  xmm6                 ; clamp to left
+
+.applyVelocity:
+    ; pos -= speed * (velocityX * frameTime)
+    movss       xmm0,  [rbx + 28]           ; load speed
+    mulss       xmm0,  xmm1                 ; speed * (velocityX * frameTime)
+    subss       xmm4,  xmm0
+    movss       [rbx + 20], xmm4            ; store result
+
+    inc         eax
+    cmp         eax,  ecx
+    jl          .loop
+
+.done:
+    movdqa      xmm6, [rsp]
+    add         rsp, 24
     pop         r12
     pop         rbx
     ret
