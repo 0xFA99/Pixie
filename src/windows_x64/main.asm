@@ -147,10 +147,12 @@ main:
 
 
 public gravity
+public targetZoom
 
 section '.data' data readable writeable
 frameTime       dd 0x00000000
 gravity         dd 0x44750000
+targetZoom      dd 0x3fe66666
 
 section '.bss' data readable writeable align 16
 align 16

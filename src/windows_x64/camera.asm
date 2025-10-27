@@ -5,6 +5,9 @@ include 'include/consts.inc'
 extrn IsKeyPressed
 extrn GetScreenWidth
 extrn GetScreenHeight
+extrn GetMouseWheelMove
+
+extrn targetZoom
 
 section '.text' code readable executable
 
@@ -33,60 +36,59 @@ _initCamera:
     ret
 
 
+
 public _updateCamera
 _updateCamera:
     push        r12
     push        r13
+    sub         rsp, 40                     ; 8 padding + 32 shadow space
 
-    sub         rsp, 40
-    movdqa      [rsp], xmm6
-    movdqa      [rsp + 16], xmm7
+    mov         r12, rcx
+    mov         r13, rdx
 
-    sub         rsp, 32
-
-    mov         r12, rcx                    ; camera
-    mov         r13, rdx                    ; player
-
-    movss       xmm7, [r12 + 20]            ; camera.zoom
-    mov         eax, 0x3dcccccd             ; 1.0
-    movd        xmm6, eax
-
-    mov         ecx, KEY_Z
-    call        IsKeyPressed
-    test        al, al
-    jz          .checkX
-
-    addss       xmm7, xmm6                  ; camera.zoom += 1.0
-
-.checkX:
-    mov         ecx, KEY_X
-    call        IsKeyPressed
-    test        al, al
-    jz          .checkC
-
-    subss       xmm7, xmm6                  ; camera.zoom -= 1.0
-
-.checkC:
     mov         ecx, KEY_C
     call        IsKeyPressed
     test        al, al
-    jz          .done
+    jz          .checkMouseScroll
 
-    mov         eax, 0x3fe66666             ; 1.8
-    movd        xmm7, eax
+    mov         dword [targetZoom], 0x3fe66666
+    jmp         .apply
 
-.done:
-    movss       [r12 + 20], xmm7            ; camera.zoom
+.checkMouseScroll:
+    call        GetMouseWheelMove
+    pxor        xmm1, xmm1
+    comiss      xmm0, xmm1
+    je          .apply
 
-    movsd       xmm0, [r13 + 16]            ; player.position {x, y}
-    movsd       [r12 + 8], xmm0             ; camera.target {x, y}
+    mov         eax, 0x3dcccccd
+    movd        xmm2, eax
+    movd        xmm3, eax
 
-    add         rsp, 32
+    mulss       xmm0, xmm2
+    addss       xmm0, [targetZoom]
 
-    movdqa      xmm7, [rsp + 16]
-    movdqa      xmm6, [rsp]
+    maxss       xmm0, xmm3
+    mov         eax, 0x40a00000
+    movd        xmm4, eax
+    minss       xmm0, xmm4
+
+    movss       [targetZoom], xmm0
+
+.apply:
+    movss       xmm0, [targetZoom]
+    movss       xmm1, [r12 + 20]
+    mov         eax, 0x3d4ccccd
+    movd        xmm2, eax
+
+    subss       xmm0, xmm1
+    mulss       xmm0, xmm2
+    addss       xmm0, xmm1
+    movss       [r12 + 20], xmm0
+
+    movsd       xmm0, [r13 + 16]
+    movsd       [r12 + 8], xmm0
+
     add         rsp, 40
-
     pop         r13
     pop         r12
     ret
