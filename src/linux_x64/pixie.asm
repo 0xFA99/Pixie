@@ -150,10 +150,12 @@ _start:
 
 
 public gravity
+public targetZoom
 
 section '.data' writeable
 frameTime       dd 0x00000000               ;   0.0
 gravity         dd 0x44750000               ; 980.0
+targetZoom      dd 0x3fe66666
 
 section '.bss' writeable align 16
 align 16
