@@ -70,24 +70,21 @@ _loadSpriteSheet:
     cmp         r9d, r13d                   ; column >= columns
     jge         .next_row
 
-    ; frame.x = column * frame.width
-    mov         eax, r9d                    ; column
-    imul        eax, r12d                   ; frame.width
-    cvtsi2ss    xmm0, eax                   ; xmm0 {frame.x}
+    movd        xmm0, r9d                   ; column        xmm0 [c, 0, 0, 0]
+    pinsrd      xmm0, r8d, 1                ; row           xmm0 [c, r, 0, 0]
+    mov         eax, 1
+    pinsrd      xmm0, eax, 2                ;               xmm0 [c, r, 1, 0]
+    pinsrd      xmm0, eax, 3                ;               xmm0 [c, r, 1, 1]
 
-    ; frame.y = row * frame.height
-    mov         eax, r8d                    ; row
-    imul        eax, r11d                   ; frame.height
-    cvtsi2ss    xmm1, eax                   ; xmm1 {frame.y}
+    movd        xmm1, r12d                  ; frame.width   xmm1 [w, 0, 0, 0]
+    pinsrd      xmm1, r11d, 1               ; frame.height  xmm1 [w, h, 0, 0]
+    pinsrd      xmm1, r12d, 2               ;               xmm1 [w, h, w, 0]
+    pinsrd      xmm1, r11d, 3               ;               xmm1 [w, h, w, h]
 
-    ; load frame {width, height}
-    cvtsi2ss    xmm2, r12d                  ; xmm2 {frame.width}
-    cvtsi2ss    xmm3, r11d                  ; xmm3 {frame.height}
+    cvtdq2ps    xmm0, xmm0                  ; ints to floats
+    cvtdq2ps    xmm1, xmm1                  ; ints to floats
 
-    ; pack xmm0 {x, y, width, height}
-    unpcklps    xmm0, xmm1
-    unpcklps    xmm2, xmm3
-    shufps      xmm0, xmm2, 01000100b
+    mulps       xmm0, xmm1                  ; xmm0 * xmm1
 
     mov         eax, ecx
     shl         rax, 4
