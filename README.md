@@ -1,8 +1,8 @@
 # Pixie
 
-**Pixie** is a small 2D adventure game written directly in **x86-64 Assembly (FASM)** for Linux.
+**Pixie** is a small 2D adventure game written in **x86-64 Assembly (FASM)** with platform-specific implementations for **Linux and Windows**.
 
-The project began as an experiment in learning how to build a game while working close to the machine: calling a C library from assembly, managing game state, handling floating-point movement and physics, and organizing a small game into reusable assembly modules.
+The project started as an experiment in learning how to build a game while working close to the machine: calling a C library from assembly, managing game state, handling floating-point movement and physics, and organizing a small game into reusable assembly modules.
 
 ![Pixie demo](assets/demo.gif)
 
@@ -10,7 +10,14 @@ The project began as an experiment in learning how to build a game while working
 
 Pixie is intentionally small. Rather than hiding the implementation behind a large engine or framework, the game uses hand-written x86-64 assembly for its gameplay and rendering-side logic, with [raylib](https://www.raylib.com/) providing the windowing, input, texture, and drawing API.
 
-Current gameplay code includes:
+The codebase currently contains separate platform implementations for:
+
+- **Linux x86-64** — `src/linux_x64/`
+- **Windows x86-64** — `src/windows_x64/`
+
+The two implementations share the same general game concepts while using platform-appropriate entry points, includes, libraries, and build tooling.
+
+## Features
 
 - Player movement and jumping
 - Horizontal acceleration and deceleration
@@ -27,24 +34,37 @@ Pixie is primarily a learning project and an exploration of low-level game progr
 
 Writing the gameplay systems in assembly makes details that are normally hidden by higher-level languages explicit: calling conventions, register usage, stack layout, memory access, floating-point operations, and interaction with external C functions.
 
-For example, the player implementation directly calls raylib functions such as `IsKeyPressed`, `IsKeyDown`, and `DrawTexturePro`, while maintaining the player state and physics data in assembly. This makes Pixie useful as a practical x86-64 learning project as well as a game.
+For example, the player implementation directly interacts with raylib functions while maintaining the player state and physics data in assembly. This makes Pixie useful as a practical x86-64 learning project as well as a game.
 
 ## Architecture
 
-The Linux x86-64 implementation is split into several assembly modules:
+Platform-specific source is kept separate:
 
 ```text
-src/linux_x64/
-├── camera.asm   # Camera handling
-├── parallax.asm # Parallax background
-├── pixie.asm    # Main game logic / entry point
-├── player.asm   # Input, movement, physics, animation state
-└── sprite.asm   # Sprite and animation handling
+src/
+├── linux_x64/
+│   ├── camera.asm
+│   ├── parallax.asm
+│   ├── pixie.asm
+│   ├── player.asm
+│   └── sprite.asm
+│
+└── windows_x64/
+    ├── camera.asm
+    ├── main.asm
+    ├── parallax.asm
+    ├── player.asm
+    ├── sprite.asm
+    ├── EQUATES/
+    ├── MACRO/
+    └── WIN64A.INC
 ```
 
-The project keeps the low-level code separate by responsibility while still staying small enough to understand as a whole.
+The Linux and Windows trees also contain their own headers/includes and raylib libraries.
 
 ## Requirements
+
+### Linux x86-64
 
 - Linux on x86-64
 - [FASM](https://flatassembler.net/)
@@ -52,9 +72,20 @@ The project keeps the low-level code separate by responsibility while still stay
 - `make`
 - [raylib](https://www.raylib.com/)
 
-The repository contains the raylib shared library used by the build under `src/linux_x64/lib/`.
+The repository includes the Linux raylib library under `src/linux_x64/lib/`.
 
-## Build
+### Windows x86-64
+
+- Windows x86-64
+- [FASM](https://flatassembler.net/)
+- A linker compatible with the provided Windows build setup
+- [raylib](https://www.raylib.com/)
+
+The repository includes the Windows-specific build assets under `src/windows_x64/lib/` and a Windows batch build script.
+
+## Building
+
+### Linux
 
 Clone the repository:
 
@@ -75,10 +106,10 @@ Run it:
 make run
 ```
 
-Or run the generated binary directly:
+The binary is generated at:
 
-```bash
-./build/linux_x64/Pixie
+```text
+build/linux_x64/Pixie
 ```
 
 Clean the build directory:
@@ -87,9 +118,7 @@ Clean the build directory:
 make clean
 ```
 
-### Release build
-
-The Makefile also provides a release mode:
+For a release build:
 
 ```bash
 make MODE=release
@@ -97,9 +126,25 @@ make MODE=release
 
 The release target strips the binary and attempts to compress it with UPX when available.
 
-## Build Pipeline
+### Windows
 
-Pixie uses a deliberately small build pipeline:
+From a suitable x86-64 Windows/FASM build environment, run:
+
+```bat
+build.bat
+```
+
+The Windows build outputs:
+
+```text
+build\windows_x64\Pixie.exe
+```
+
+The batch script assembles the files under `src\windows_x64\`, links them with the Windows raylib library, and copies the required DLL beside the executable.
+
+## Build Pipelines
+
+### Linux
 
 ```text
 FASM (.asm)
@@ -113,16 +158,30 @@ Linux x86-64 executable
 raylib + system libraries
 ```
 
-The linker resolves the external C/raylib functions used by the assembly modules, while FASM produces the ELF64 object files.
+### Windows
+
+```text
+FASM (.asm)
+    ↓
+COFF/object files
+    ↓
+Windows x86-64 linker
+    ↓
+Windows executable (.exe)
+    ↓
+raylib DLL + system libraries
+```
+
+The exact linker/toolchain differs between the platform implementations.
 
 ## Learning Goals
 
 Pixie is an ongoing experiment around:
 
 - x86-64 assembly programming
-- Linux ELF64 binaries
-- FASM and GNU toolchains
-- x86-64 calling conventions
+- Platform-specific assembly development
+- Linux ELF64 and Windows executable/toolchain concepts
+- Calling conventions and ABI differences
 - Register and stack management
 - Floating-point operations with SSE instructions
 - Calling C APIs from assembly
