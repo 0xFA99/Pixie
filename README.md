@@ -1,52 +1,140 @@
-# Pixie - A Tiny Adventure in Assembly!
+# Pixie
 
-Welcome to **Pixie**, a simple yet magical gmae written in **x64 assembly (FASM)** using the raw pixel-shooting power of **Raylib** and the blood, sweat and tears of my remining neurons!
+**Pixie** is a small 2D adventure game written directly in **x86-64 Assembly (FASM)** for Linux.
 
-This is not just a game. It's a cry for help.
-It's a rebellion against modern software bloat.
+The project began as an experiment in learning how to build a game while working close to the machine: calling a C library from assembly, managing game state, handling floating-point movement and physics, and organizing a small game into reusable assembly modules.
 
-![Demo](assets/demo.gif)
+![Pixie demo](assets/demo.gif)
 
-## Getting Started
-### Requirements
-- Linux (x86_64)
-- [FASM](https://flatassembler.net/) - because who needs sanity
-- [Raylib](https://www.raylib.com/) - one of the few C libs that didn't gaslight me (yet)
-- `ld` (GNU linker)
-- `make` - cause I like to pretend things are automated
-- optional: a therapist (for debug trauma)
+## What is Pixie?
 
-### Build & Run
-Clone the repo:
-```sh
-$ git clone https://github.com/0xFA99/Pixie.git
-$ cd Pixie
-$ make
-$ ./Pixie
+Pixie is intentionally small. Rather than hiding the implementation behind a large engine or framework, the game uses hand-written x86-64 assembly for its gameplay and rendering-side logic, with [raylib](https://www.raylib.com/) providing the windowing, input, texture, and drawing API.
+
+Current gameplay code includes:
+
+- Player movement and jumping
+- Horizontal acceleration and deceleration
+- Gravity and simple ground handling
+- Player state machine (`idle`, `run`, `jump`, `fall`, `break`)
+- Sprite animation
+- Sprite flipping / directional rendering
+- 2D camera handling
+- Parallax background rendering
+
+## Why Assembly?
+
+Pixie is primarily a learning project and an exploration of low-level game programming.
+
+Writing the gameplay systems in assembly makes details that are normally hidden by higher-level languages explicit: calling conventions, register usage, stack layout, memory access, floating-point operations, and interaction with external C functions.
+
+For example, the player implementation directly calls raylib functions such as `IsKeyPressed`, `IsKeyDown`, and `DrawTexturePro`, while maintaining the player state and physics data in assembly. This makes Pixie useful as a practical x86-64 learning project as well as a game.
+
+## Architecture
+
+The Linux x86-64 implementation is split into several assembly modules:
+
+```text
+src/linux_x64/
+├── camera.asm   # Camera handling
+├── parallax.asm # Parallax background
+├── pixie.asm    # Main game logic / entry point
+├── player.asm   # Input, movement, physics, animation state
+└── sprite.asm   # Sprite and animation handling
 ```
-> **Warning:** running this may cause your CPU to feel disrespected and overachive out of fear.
-To clean up:
-```sh
-$ make clean
+
+The project keeps the low-level code separate by responsibility while still staying small enough to understand as a whole.
+
+## Requirements
+
+- Linux on x86-64
+- [FASM](https://flatassembler.net/)
+- GNU `ld`
+- `make`
+- [raylib](https://www.raylib.com/)
+
+The repository contains the raylib shared library used by the build under `src/linux_x64/lib/`.
+
+## Build
+
+Clone the repository:
+
+```bash
+git clone https://github.com/0xFA99/Pixie.git
+cd Pixie
 ```
 
-## TO-DO
-- [x] Draw Sprite
-- [x] Add Camera2D
-- [X] Add Flip Sprite
-- [X] Add Sprite Animation
-- [X] Add Movement
-- [X] Add Parallax Background
-- [ ] Add Camera Linear interpolation
-- [ ] Add mental health recovery mechanic
-- [ ] Add sound effects if I dont scream first
-- [ ] Port to brainfuck or Morse code (maybe)
+Build the default Debug configuration:
 
-## Warning
-This project was written in FASM, with zero safety nets, training wheels or regrets.
-By running it, you agree that:
-- if anything breaks dont contact me - contact a shaman.
-- if your GPU starts chanting in Latin, thats a feature.
-- understanding this code may unlock ancient knowledge or possibly just migrains
+```bash
+make
+```
 
-## Use freely, suffer responsibly.
+Run it:
+
+```bash
+make run
+```
+
+Or run the generated binary directly:
+
+```bash
+./build/linux_x64/Pixie
+```
+
+Clean the build directory:
+
+```bash
+make clean
+```
+
+### Release build
+
+The Makefile also provides a release mode:
+
+```bash
+make MODE=release
+```
+
+The release target strips the binary and attempts to compress it with UPX when available.
+
+## Build Pipeline
+
+Pixie uses a deliberately small build pipeline:
+
+```text
+FASM (.asm)
+    ↓
+ELF64 object files (.o)
+    ↓
+GNU ld
+    ↓
+Linux x86-64 executable
+    ↓
+raylib + system libraries
+```
+
+The linker resolves the external C/raylib functions used by the assembly modules, while FASM produces the ELF64 object files.
+
+## Learning Goals
+
+Pixie is an ongoing experiment around:
+
+- x86-64 assembly programming
+- Linux ELF64 binaries
+- FASM and GNU toolchains
+- x86-64 calling conventions
+- Register and stack management
+- Floating-point operations with SSE instructions
+- Calling C APIs from assembly
+- Game-state machines
+- Basic 2D physics
+- Sprite animation and rendering
+- Separating game systems into low-level modules
+
+## Status
+
+Pixie is a personal learning project. It is functional, but the architecture and gameplay are still experimental and may change as the project evolves.
+
+## License
+
+See [LICENSE](LICENSE) for the current license.
